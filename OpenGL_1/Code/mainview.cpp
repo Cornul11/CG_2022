@@ -15,6 +15,7 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
     connect(&timer, SIGNAL(timeout()), this, SLOT(update()));
 
     transformCube.translate(2, 0, -6);
+    transformPyramid.translate(-2, 0, -6);
 
     projectTransform.perspective(60.0f, 1.0f, 1.0f, 100);
 
@@ -37,6 +38,9 @@ MainView::~MainView() {
 
     glDeleteBuffers(1, &VBOCube);
     glDeleteVertexArrays(1, &VAOCube);
+
+    glDeleteBuffers(1, &VBOPyramid);
+    glDeleteVertexArrays(1, &VAOPyramid);
 
     makeCurrent();
 }
@@ -102,6 +106,13 @@ void MainView::initializeGL() {
                                   v5, v8, v7,
                                   v5, v7, v6};
 
+    Vertex vertexArrayPyramid[18] = {v2, v6, v7,
+                                     v2, v7, v3,
+                                     v9, v2, v3,
+                                     v9, v3, v7,
+                                     v9, v7, v6,
+                                     v9, v6, v2};
+
     // CUBE
     // VBO
     glGenBuffers(1, &VBOCube);
@@ -111,6 +122,23 @@ void MainView::initializeGL() {
     // VAO
     glGenVertexArrays(1, &VAOCube);
     glBindVertexArray(VAOCube);
+
+    // Telling GPU layout of data
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
+
+    // PYRAMID
+    // VBO
+    glGenBuffers(1, &VBOPyramid);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOPyramid);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArrayPyramid), vertexArrayPyramid, GL_STATIC_DRAW);
+
+    // VAO
+    glGenVertexArrays(1, &VAOPyramid);
+    glBindVertexArray(VAOPyramid);
 
     // Telling GPU layout of data
     glEnableVertexAttribArray(0);
@@ -153,6 +181,10 @@ void MainView::paintGL() {
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformCube.data());
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
+    glBindVertexArray(VAOPyramid);
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformPyramid.data());
+    glDrawArrays(GL_TRIANGLES, 0, 18);
+
     shaderProgram.release();
 }
 
@@ -161,11 +193,16 @@ void MainView::rotateFunction(int x, int y, int z) {
     transformCube.rotate(x, 1, 0, 0);
     transformCube.rotate(y, 0, 1, 0);
     transformCube.rotate(z, 0, 0, 1);
+
+    transformPyramid.rotate(x, 1, 0, 0);
+    transformPyramid.rotate(y, 0, 1, 0);
+    transformPyramid.rotate(z, 0, 0, 1);
 }
 
 void MainView::scaleFunction(float s) {
     // Set scale
     transformCube.scale(s);
+    transformPyramid.scale(s);
 }
 
 /**
@@ -191,6 +228,9 @@ void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
     transformCube = QMatrix4x4();
     transformCube.translate(2, 0, -6);
 
+    transformPyramid = QMatrix4x4();
+    transformPyramid.translate(-2, 0, -6);
+
     // initialize global rotation variables, so they can be used again before scaling.
     globalRotateX = rotateX;
     globalRotateY = rotateY;
@@ -207,6 +247,9 @@ void MainView::setScale(int scale) {
 
     transformCube = QMatrix4x4();
     transformCube.translate(2, 0, -6);
+
+    transformPyramid = QMatrix4x4();
+    transformPyramid.translate(-2, 0, -6);
 
     // set global scale
     globalScale = scale / 100.0f;

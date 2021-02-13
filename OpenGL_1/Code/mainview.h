@@ -24,12 +24,15 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
     GLuint VBOCube;
     GLuint VAOCube;
+    GLuint VBOPyramid;
+    GLuint VAOPyramid;
 
     GLint modelLocation;
     GLint projectionLocation;
 
     QMatrix4x4 projectTransform;
     QMatrix4x4 transformCube;
+    QMatrix4x4 transformPyramid;
 
     Vertex v1, v2, v3, v4, v5, v6, v7, v8, v9;
 public:

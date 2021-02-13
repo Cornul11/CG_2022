@@ -27,7 +27,7 @@ add_executable(Code
         vertex.cpp
         vertex.h
         shaders/vertshader.glsl
-        shaders/fragshader.glsl vertex.h)
+        shaders/fragshader.glsl)
 
 target_link_libraries(Code Qt5::Widgets)
 target_link_libraries(Code Qt5::Core)
