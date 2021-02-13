@@ -13,6 +13,15 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
     qDebug() << "MainView constructor";
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(update()));
+
+    transformCube.translate(2, 0, -6);
+
+    projectTransform.perspective(60.0f, 1.0f, 1.0f, 100);
+
+    globalRotateX = 0;
+    globalRotateY = 0;
+    globalRotateZ = 0;
+    globalScale = 1;
 }
 
 /**
@@ -25,6 +34,9 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
  */
 MainView::~MainView() {
     qDebug() << "MainView destructor";
+
+    glDeleteBuffers(1, &VBOCube);
+    glDeleteVertexArrays(1, &VAOCube);
 
     makeCurrent();
 }
@@ -66,6 +78,46 @@ void MainView::initializeGL() {
     glClearColor(0.2f, 0.5f, 0.7f, 0.0f);
 
     createShaderProgram();
+
+    v1 = createVertex(-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
+    v2 = createVertex(-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f);
+    v3 = createVertex(1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+    v4 = createVertex(1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
+    v5 = createVertex(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
+    v6 = createVertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f);
+    v7 = createVertex(1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f);
+    v8 = createVertex(1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
+    v9 = createVertex(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+
+    Vertex vertexArrayCube[36] = {v1, v2, v3,
+                                  v3, v4, v1,
+                                  v1, v4, v5,
+                                  v4, v8, v5,
+                                  v1, v5, v6,
+                                  v1, v6, v2,
+                                  v2, v6, v7,
+                                  v2, v7, v3,
+                                  v4, v3, v7,
+                                  v4, v7, v8,
+                                  v5, v8, v7,
+                                  v5, v7, v6};
+
+    // CUBE
+    // VBO
+    glGenBuffers(1, &VBOCube);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArrayCube), vertexArrayCube, GL_STATIC_DRAW);
+
+    // VAO
+    glGenVertexArrays(1, &VAOCube);
+    glBindVertexArray(VAOCube);
+
+    // Telling GPU layout of data
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
 }
 
 void MainView::createShaderProgram() {
@@ -75,6 +127,9 @@ void MainView::createShaderProgram() {
     shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,
                                            ":/shaders/fragshader.glsl");
     shaderProgram.link();
+
+    modelLocation = shaderProgram.uniformLocation("modelTransform");
+    projectionLocation = shaderProgram.uniformLocation("projectionTransform");
 }
 
 // --- OpenGL drawing
@@ -91,9 +146,26 @@ void MainView::paintGL() {
 
     shaderProgram.bind();
 
+    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, projectTransform.data());
+
     // Draw here
+    glBindVertexArray(VAOCube);
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformCube.data());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     shaderProgram.release();
+}
+
+void MainView::rotateFunction(int x, int y, int z) {
+    // Rotate
+    transformCube.rotate(x, 1, 0, 0);
+    transformCube.rotate(y, 0, 1, 0);
+    transformCube.rotate(z, 0, 0, 1);
+}
+
+void MainView::scaleFunction(float s) {
+    // Set scale
+    transformCube.scale(s);
 }
 
 /**
@@ -105,21 +177,47 @@ void MainView::paintGL() {
  * @param newHeight
  */
 void MainView::resizeGL(int newWidth, int newHeight) {
-    // TODO: Update projection to fit the new aspect ratio
-    Q_UNUSED(newWidth)
-    Q_UNUSED(newHeight)
+    float newAspect = (float) newWidth / (float) newHeight;
+    projectTransform.setToIdentity();
+    projectTransform.perspective(60.0f, newAspect * 1.0f, 1.0f, 100.0f);
+    update();
 }
 
 // --- Public interface
 
 void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
     qDebug() << "Rotation changed to (" << rotateX << "," << rotateY << "," << rotateZ << ")";
-    Q_UNIMPLEMENTED();
+
+    transformCube = QMatrix4x4();
+    transformCube.translate(2, 0, -6);
+
+    // initialize global rotation variables, so they can be used again before scaling.
+    globalRotateX = rotateX;
+    globalRotateY = rotateY;
+    globalRotateZ = rotateZ;
+
+    scaleFunction(globalScale);
+    rotateFunction(rotateX, rotateY, rotateZ);
+
+    update();
 }
 
 void MainView::setScale(int scale) {
     qDebug() << "Scale changed to " << scale;
-    Q_UNIMPLEMENTED();
+
+    transformCube = QMatrix4x4();
+    transformCube.translate(2, 0, -6);
+
+    // set global scale
+    globalScale = scale / 100.0f;
+
+    // rotation
+    rotateFunction(globalRotateX, globalRotateY, globalRotateZ);
+
+    // scaling
+    scaleFunction(globalScale);
+
+    update();
 }
 
 void MainView::setShadingMode(ShadingMode shading) {

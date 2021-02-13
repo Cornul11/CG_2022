@@ -24,8 +24,10 @@ add_executable(Code
         model.h
         resources.qrc
         user_input.cpp
+        vertex.cpp
+        vertex.h
         shaders/vertshader.glsl
-        shaders/fragshader.glsl)
+        shaders/fragshader.glsl vertex.h)
 
 target_link_libraries(Code Qt5::Widgets)
 target_link_libraries(Code Qt5::Core)

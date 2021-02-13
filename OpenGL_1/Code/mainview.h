@@ -2,6 +2,7 @@
 #define MAINVIEW_H
 
 #include "model.h"
+#include "vertex.h"
 
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -16,6 +17,21 @@
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     Q_OBJECT
 
+    int globalRotateX;
+    int globalRotateY;
+    int globalRotateZ;
+    float globalScale;
+
+    GLuint VBOCube;
+    GLuint VAOCube;
+
+    GLint modelLocation;
+    GLint projectionLocation;
+
+    QMatrix4x4 projectTransform;
+    QMatrix4x4 transformCube;
+
+    Vertex v1, v2, v3, v4, v5, v6, v7, v8, v9;
 public:
     enum ShadingMode : GLuint {
         PHONG = 0, NORMAL, GOURAUD
@@ -33,7 +49,8 @@ protected:
     void initializeGL();
     void resizeGL(int newWidth, int newHeight);
     void paintGL();
-
+    void rotateFunction(int x, int y, int z);
+    void scaleFunction(float s);
     // Functions for keyboard input events
     void keyPressEvent(QKeyEvent *ev);
     void keyReleaseEvent(QKeyEvent *ev);
