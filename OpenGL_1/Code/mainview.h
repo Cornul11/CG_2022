@@ -15,7 +15,7 @@
 #include <memory>
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
-    Q_OBJECT
+Q_OBJECT
 
     int globalRotateX;
     int globalRotateY;
@@ -38,6 +38,10 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     QMatrix4x4 transformSphere;
 
     Vertex v1, v2, v3, v4, v5, v6, v7, v8, v9;
+    std::vector<Vertex> vertexArrayCube;
+    std::vector<Vertex> vertexArrayPyramid;
+    std::vector<Vertex> vertexArraySphere;
+
 public:
     enum ShadingMode : GLuint {
         PHONG = 0, NORMAL, GOURAUD
@@ -69,7 +73,7 @@ protected:
     void wheelEvent(QWheelEvent *ev);
 
 private slots:
-    static void onMessageLogged( const QOpenGLDebugMessage& Message );
+    static void onMessageLogged(const QOpenGLDebugMessage &Message);
 
 private:
     QOpenGLDebugLogger debugLogger;
@@ -80,6 +84,10 @@ private:
     void createShaderProgram();
     QVector<QVector3D> sphereVertices;
     int sphereSize;
+    void sendVertexData(std::vector<Vertex> sphere,
+                        std::vector<Vertex> cube,
+                        std::vector<Vertex> pyramid);
+    void defineObjects();
 };
 
 #endif // MAINVIEW_H

@@ -87,22 +87,30 @@ void MainView::initializeGL() {
 
     createShaderProgram();
 
+    defineObjects();
+
+    sendVertexData(vertexArraySphere, vertexArrayCube, vertexArrayPyramid);
+}
+
+void MainView::defineObjects() {
+    // load sphere object
     Model sphereModel = Model(QString(":/models/sphere.obj"));
     sphereModel.unitize();
 
     sphereVertices = sphereModel.getVertices();
     sphereSize = sphereVertices.size();
 
-    Vertex vertexArraySphere[sphereSize];
+    vertexArraySphere.reserve(sphereSize);
     for (int i = 0; i < sphereSize; i++) {
-        vertexArraySphere[i] = createVertex(sphereVertices[i].x(),
-                                            sphereVertices[i].y(),
-                                            sphereVertices[i].z(),
-                                            rand() / double(RAND_MAX),
-                                            rand() / double(RAND_MAX),
-                                            rand() / double(RAND_MAX));
+        vertexArraySphere.push_back(createVertex(sphereVertices[i].x(),
+                                                 sphereVertices[i].y(),
+                                                 sphereVertices[i].z(),
+                                                 rand() / double(RAND_MAX),
+                                                 rand() / double(RAND_MAX),
+                                                 rand() / double(RAND_MAX)));
     }
 
+    // define the vertices that will be used for the square and the pyramid
     v1 = createVertex(-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
     v2 = createVertex(-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f);
     v3 = createVertex(1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
@@ -113,37 +121,52 @@ void MainView::initializeGL() {
     v8 = createVertex(1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f);
     v9 = createVertex(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
 
-    Vertex vertexArrayCube[36] = {v1, v2, v3,
-                                  v3, v4, v1,
-                                  v1, v4, v5,
-                                  v4, v8, v5,
-                                  v1, v5, v6,
-                                  v1, v6, v2,
-                                  v2, v6, v7,
-                                  v2, v7, v3,
-                                  v4, v3, v7,
-                                  v4, v7, v8,
-                                  v5, v8, v7,
-                                  v5, v7, v6};
+    // define the triangles of the cube
+    vertexArrayCube = {v1, v2, v3,
+                       v3, v4, v1,
+                       v1, v4, v5,
+                       v4, v8, v5,
+                       v1, v5, v6,
+                       v1, v6, v2,
+                       v2, v6, v7,
+                       v2, v7, v3,
+                       v4, v3, v7,
+                       v4, v7, v8,
+                       v5, v8, v7,
+                       v5, v7, v6};
 
-    Vertex vertexArrayPyramid[18] = {v2, v6, v7,
-                                     v2, v7, v3,
-                                     v9, v2, v3,
-                                     v9, v3, v7,
-                                     v9, v7, v6,
-                                     v9, v6, v2};
+    // define the triangles of the pyramid
+    vertexArrayPyramid = {v2, v6, v7,
+                          v2, v7, v3,
+                          v9, v2, v3,
+                          v9, v3, v7,
+                          v9, v7, v6,
+                          v9, v6, v2};
+}
 
+/**
+ * @brief MainView::sendVertexData
+ *
+ * Called upon OpenGL initialization
+ * Sends the layout of the data and the data itself to the GPU
+ * @param sphere
+ * @param cube
+ * @param pyramid
+ */
+void MainView::sendVertexData(std::vector<Vertex> sphere,
+                              std::vector<Vertex> cube,
+                              std::vector<Vertex> pyramid) {
     // CUBE
+    Vertex localVertexArrayCube[cube.size()];
+    std::copy(cube.begin(), cube.end(), localVertexArrayCube);
     // VBO
     glGenBuffers(1, &VBOCube);
     glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArrayCube), vertexArrayCube, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArrayCube), localVertexArrayCube, GL_STATIC_DRAW);
     // VAO
     glGenVertexArrays(1, &VAOCube);
     glBindVertexArray(VAOCube);
-
-    // Telling GPU layout of data
+    // Telling the GPU the layout of the data
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -151,16 +174,16 @@ void MainView::initializeGL() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
 
     // PYRAMID
+    Vertex localVertexArrayPyramid[pyramid.size()];
+    std::copy(pyramid.begin(), pyramid.end(), localVertexArrayPyramid);
     // VBO
     glGenBuffers(1, &VBOPyramid);
     glBindBuffer(GL_ARRAY_BUFFER, VBOPyramid);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArrayPyramid), vertexArrayPyramid, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArrayPyramid), localVertexArrayPyramid, GL_STATIC_DRAW);
     // VAO
     glGenVertexArrays(1, &VAOPyramid);
     glBindVertexArray(VAOPyramid);
-
-    // Telling GPU layout of data
+    // Telling the GPU the layout of the data
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -168,16 +191,16 @@ void MainView::initializeGL() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
 
     // SPHERE
+    Vertex localVertexArraySphere[sphere.size()];
+    std::copy(sphere.begin(), sphere.end(), localVertexArraySphere);
     // VBO
     glGenBuffers(1, &VBOSphere);
     glBindBuffer(GL_ARRAY_BUFFER, VBOSphere);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArraySphere), vertexArraySphere, GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArraySphere), localVertexArraySphere, GL_STATIC_DRAW);
     // VAO
     glGenVertexArrays(1, &VAOSphere);
     glBindVertexArray(VAOSphere);
-
-    // Telling GPU layout of data
+    // Telling the GPU the layout of the data
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -269,8 +292,6 @@ void MainView::resizeGL(int newWidth, int newHeight) {
 // --- Public interface
 
 void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
-    qDebug() << "Rotation changed to (" << rotateX << "," << rotateY << "," << rotateZ << ")";
-
     transformCube = QMatrix4x4();
     transformCube.translate(2, 0, -6);
 
@@ -292,8 +313,6 @@ void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
 }
 
 void MainView::setScale(int scale) {
-    qDebug() << "Scale changed to " << scale;
-
     transformCube = QMatrix4x4();
     transformCube.translate(2, 0, -6);
 
