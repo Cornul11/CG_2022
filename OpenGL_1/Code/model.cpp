@@ -59,7 +59,49 @@ Model::Model(QString filename) {
  *
  */
 void Model::unitize() {
-    qDebug() << "TODO: implement this yourself";
+    QVector3D min, max, center, distance;
+    float len;
+
+    if (vertices.empty()) {
+        return;
+    }
+
+    //initialize min and max with the first vertex
+    min.setX(vertices[0].x());
+    min.setY(vertices[0].y());
+    min.setZ(vertices[0].z());
+    max.setX(vertices[0].x());
+    max.setY(vertices[0].y());
+    max.setZ(vertices[0].z());
+
+    //get the extremes of the model
+    for (QVector3D vertex : vertices) {
+        if (vertex.x() < min.x()) {
+            min.setX(vertex.x());
+        } else if (vertex.x() > max.x()) {
+            max.setX(vertex.x());
+        }
+        if (vertex.y() < min.y()) {
+            min.setY(vertex.y());
+        } else if (vertex.y() > max.y()) {
+            max.setY(vertex.y());
+        }
+        if (vertex.z() < min.z()) {
+            min.setZ(vertex.z());
+        } else if (vertex.z() > max.z()) {
+            max.setZ(vertex.z());
+        }
+    }
+
+    // scale the object to coordinates in the range [-1, 1] and center it
+    center = (min + max) / 2;
+    distance = max - min;
+    len = qMax(qMax(distance.x(), distance.y()), distance.z()) / 2;
+
+    for (QVector3D &vertex : vertices) {
+        vertex -= center;
+        vertex /= len;
+    }
 }
 
 QVector<QVector3D> Model::getVertices() {
