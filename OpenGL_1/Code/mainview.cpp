@@ -16,6 +16,7 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
 
     transformCube.translate(2, 0, -6);
     transformPyramid.translate(-2, 0, -6);
+    transformSphere.translate(0, 0, -10);
 
     projectTransform.perspective(60.0f, 1.0f, 1.0f, 100);
 
@@ -42,6 +43,9 @@ MainView::~MainView() {
     glDeleteBuffers(1, &VBOPyramid);
     glDeleteVertexArrays(1, &VAOPyramid);
 
+    glDeleteBuffers(1, &VBOSphere);
+    glDeleteVertexArrays(1, &VAOSphere);
+
     makeCurrent();
 }
 
@@ -57,7 +61,7 @@ void MainView::initializeGL() {
     qDebug() << ":: Initializing OpenGL";
     initializeOpenGLFunctions();
 
-    connect(&debugLogger, SIGNAL( messageLogged( QOpenGLDebugMessage)),
+    connect(&debugLogger, SIGNAL(messageLogged(QOpenGLDebugMessage)),
             this, SLOT(onMessageLogged(QOpenGLDebugMessage)), Qt::DirectConnection);
 
     if (debugLogger.initialize()) {
@@ -66,7 +70,7 @@ void MainView::initializeGL() {
     }
 
     QString glVersion;
-    glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    glVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
     qDebug() << ":: Using OpenGL" << qPrintable(glVersion);
 
     // Enable depth buffer
@@ -82,6 +86,22 @@ void MainView::initializeGL() {
     glClearColor(0.2f, 0.5f, 0.7f, 0.0f);
 
     createShaderProgram();
+
+    Model sphereModel = Model(QString(":/models/sphere.obj"));
+    sphereModel.unitize();
+
+    sphereVertices = sphereModel.getVertices();
+    sphereSize = sphereVertices.size();
+
+    Vertex vertexArraySphere[sphereSize];
+    for (int i = 0; i < sphereSize; i++) {
+        vertexArraySphere[i] = createVertex(sphereVertices[i].x(),
+                                            sphereVertices[i].y(),
+                                            sphereVertices[i].z(),
+                                            rand() / double(RAND_MAX),
+                                            rand() / double(RAND_MAX),
+                                            rand() / double(RAND_MAX));
+    }
 
     v1 = createVertex(-1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
     v2 = createVertex(-1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f);
@@ -146,14 +166,31 @@ void MainView::initializeGL() {
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
+
+    // SPHERE
+    // VBO
+    glGenBuffers(1, &VBOSphere);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOSphere);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArraySphere), vertexArraySphere, GL_STATIC_DRAW);
+
+    // VAO
+    glGenVertexArrays(1, &VAOSphere);
+    glBindVertexArray(VAOSphere);
+
+    // Telling GPU layout of data
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
 }
 
 void MainView::createShaderProgram() {
     // Create shader program
     shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                           ":/shaders/vertshader.glsl");
+                                          ":/shaders/vertshader.glsl");
     shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                           ":/shaders/fragshader.glsl");
+                                          ":/shaders/fragshader.glsl");
     shaderProgram.link();
 
     modelLocation = shaderProgram.uniformLocation("modelTransform");
@@ -185,6 +222,10 @@ void MainView::paintGL() {
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformPyramid.data());
     glDrawArrays(GL_TRIANGLES, 0, 18);
 
+    glBindVertexArray(VAOSphere);
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformSphere.data());
+    glDrawArrays(GL_TRIANGLES, 0, sphereSize);
+
     shaderProgram.release();
 }
 
@@ -197,12 +238,17 @@ void MainView::rotateFunction(int x, int y, int z) {
     transformPyramid.rotate(x, 1, 0, 0);
     transformPyramid.rotate(y, 0, 1, 0);
     transformPyramid.rotate(z, 0, 0, 1);
+
+    transformSphere.rotate(x, 1, 0, 0);
+    transformSphere.rotate(y, 0, 1, 0);
+    transformSphere.rotate(z, 0, 0, 1);
 }
 
 void MainView::scaleFunction(float s) {
     // Set scale
     transformCube.scale(s);
     transformPyramid.scale(s);
+    transformSphere.scale(s);
 }
 
 /**
@@ -231,6 +277,9 @@ void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
     transformPyramid = QMatrix4x4();
     transformPyramid.translate(-2, 0, -6);
 
+    transformSphere = QMatrix4x4();
+    transformSphere.translate(0, 0, -10);
+
     // initialize global rotation variables, so they can be used again before scaling.
     globalRotateX = rotateX;
     globalRotateY = rotateY;
@@ -250,6 +299,9 @@ void MainView::setScale(int scale) {
 
     transformPyramid = QMatrix4x4();
     transformPyramid.translate(-2, 0, -6);
+
+    transformSphere = QMatrix4x4();
+    transformSphere.translate(0, 0, -10);
 
     // set global scale
     globalScale = scale / 100.0f;
@@ -277,6 +329,6 @@ void MainView::setShadingMode(ShadingMode shading) {
  *
  * @param Message
  */
-void MainView::onMessageLogged( QOpenGLDebugMessage Message ) {
+void MainView::onMessageLogged(const QOpenGLDebugMessage &Message) {
     qDebug() << " → Log:" << Message;
 }

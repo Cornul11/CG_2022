@@ -26,6 +26,8 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     GLuint VAOCube;
     GLuint VBOPyramid;
     GLuint VAOPyramid;
+    GLuint VBOSphere;
+    GLuint VAOSphere;
 
     GLint modelLocation;
     GLint projectionLocation;
@@ -33,6 +35,7 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     QMatrix4x4 projectTransform;
     QMatrix4x4 transformCube;
     QMatrix4x4 transformPyramid;
+    QMatrix4x4 transformSphere;
 
     Vertex v1, v2, v3, v4, v5, v6, v7, v8, v9;
 public:
@@ -66,7 +69,7 @@ protected:
     void wheelEvent(QWheelEvent *ev);
 
 private slots:
-    void onMessageLogged( QOpenGLDebugMessage Message );
+    static void onMessageLogged( const QOpenGLDebugMessage& Message );
 
 private:
     QOpenGLDebugLogger debugLogger;
@@ -75,6 +78,8 @@ private:
     QOpenGLShaderProgram shaderProgram;
 
     void createShaderProgram();
+    QVector<QVector3D> sphereVertices;
+    int sphereSize;
 };
 
 #endif // MAINVIEW_H
