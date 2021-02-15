@@ -3,16 +3,15 @@
 
 #include "../object.h"
 
-class Cylinder: public Object
-{
+class Cylinder : public Object {
     Point const position;
     Vector const direction;
     double const radius;
 
-    public:
-        Cylinder(Point const &pos, Vector const &direction, double radius);
+public:
+    Cylinder(Point const &pos, Vector const &direction, double radius);
 
-        virtual Hit intersect(Ray const &ray);
+    virtual Hit intersect(Ray const &ray);
 };
 
 #endif

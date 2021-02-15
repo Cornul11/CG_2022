@@ -19,8 +19,7 @@ bool solveABC(double &a, double &b, double &c, double &x0, double &x1) {
     return true;
 }
 
-Hit Sphere::intersect(Ray const &ray)
-{
+Hit Sphere::intersect(Ray const &ray) {
     /****************************************************
     * RT1.1: INTERSECTION CALCULATION
     *
@@ -77,7 +76,6 @@ Hit Sphere::intersect(Ray const &ray)
 }
 
 Sphere::Sphere(Point const &pos, double radius)
-:
+    :
     position(pos),
-    r(radius)
-{}
+    r(radius) {}

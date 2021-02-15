@@ -28,52 +28,40 @@
 using namespace std;        // no std:: required
 using json = nlohmann::json;
 
-bool Raytracer::parseObjectNode(json const &node)
-{
+bool Raytracer::parseObjectNode(json const &node) {
     ObjectPtr obj = nullptr;
 
 // =============================================================================
 // -- Determine type and parse object parameters ------------------------------
 // =============================================================================
 
-    if (node["type"] == "sphere")
-    {
+    if (node["type"] == "sphere") {
         Point pos(node["position"]);
         double radius = node["radius"];
         obj = ObjectPtr(new Sphere(pos, radius));
-    }
-    else if(node["type"] == "triangle")
-    {
+    } else if (node["type"] == "triangle") {
         Point v0(node["v0"]);
         Point v1(node["v1"]);
         Point v2(node["v2"]);
         obj = ObjectPtr(new Triangle(v0, v1, v2));
-    }
-    else if (node["type"] == "cylinder")
-    {
+    } else if (node["type"] == "cylinder") {
         Point position(node["position"]);
         Vector direction(node["direction"]);
         double radius = node["radius"];
         obj = ObjectPtr(new Cylinder(position, direction, radius));
-    }
-    else if(node["type"] == "mesh")
-    {
+    } else if (node["type"] == "mesh") {
         string filename = node["filename"];
         Point position(node["position"]);
         Vector rotation(node["rotation"]);
         Vector scale(node["scale"]);
         obj = ObjectPtr(new Mesh(filename, position, rotation, scale));
-    }
-    else if (node["type"] == "quad")
-    {
+    } else if (node["type"] == "quad") {
         Point v0(node["v0"]);
         Point v1(node["v1"]);
         Point v2(node["v2"]);
         Point v3(node["v3"]);
         obj = ObjectPtr(new Quad(v0, v1, v2, v3));
-    }
-    else
-    {
+    } else {
         cerr << "Unknown object type: " << node["type"] << ".\n";
     }
 
@@ -90,26 +78,23 @@ bool Raytracer::parseObjectNode(json const &node)
     return true;
 }
 
-Light Raytracer::parseLightNode(json const &node) const
-{
+Light Raytracer::parseLightNode(json const &node) const {
     Point pos(node["position"]);
     Color col(node["color"]);
     return Light(pos, col);
 }
 
-Material Raytracer::parseMaterialNode(json const &node) const
-{
+Material Raytracer::parseMaterialNode(json const &node) const {
     Color color(node["color"]);
     double ka = node["ka"];
     double kd = node["kd"];
     double ks = node["ks"];
-    double n  = node["n"];
+    double n = node["n"];
     return Material(color, ka, kd, ks, n);
 }
 
 bool Raytracer::readScene(string const &ifname)
-try
-{
+try {
     // Read and parse input json file
     ifstream infile(ifname);
     if (!infile) throw runtime_error("Could not open input file for reading.");
@@ -139,14 +124,12 @@ try
 
     return true;
 }
-catch (exception const &ex)
-{
+catch (exception const &ex) {
     cerr << ex.what() << '\n';
     return false;
 }
 
-void Raytracer::renderToFile(string const &ofname)
-{
+void Raytracer::renderToFile(string const &ofname) {
     // TODO: the size may be a settings in your file
     Image img(400, 400);
     cout << "Tracing...\n";

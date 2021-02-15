@@ -1,8 +1,7 @@
 #ifndef VERTEX_H_
 #define VERTEX_H_
 
-struct Vertex
-{
+struct Vertex {
     float x;    // x coordinate
     float y;    // y coordinate
     float z;    // z coordinate

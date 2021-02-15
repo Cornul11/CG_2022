@@ -10,21 +10,18 @@
 
 using namespace std;
 
-Hit Mesh::intersect(Ray const &ray)
-{
+Hit Mesh::intersect(Ray const &ray) {
     // Replace the return of a NO_HIT by determining the intersection based
     // on the ray and this class's data members.
 
     return Hit::NO_HIT();
 }
 
-Mesh::Mesh(string const &filename, Point const &position, Vector const &rotation, Vector const &scale)
-{
+Mesh::Mesh(string const &filename, Point const &position, Vector const &rotation, Vector const &scale) {
     OBJLoader model(filename);
     d_tris.reserve(model.numTriangles());
     vector<Vertex> vertices = model.vertex_data();
-    for (size_t tri = 0; tri != model.numTriangles(); ++tri)
-    {
+    for (size_t tri = 0; tri != model.numTriangles(); ++tri) {
         Vertex one = vertices[tri * 3];
         Point v0(one.x, one.y, one.z);
 
@@ -52,5 +49,5 @@ Mesh::Mesh(string const &filename, Point const &position, Vector const &rotation
     }
 
     cout << "Loaded model: " << filename << " with " <<
-        model.numTriangles() << " triangles.\n";
+         model.numTriangles() << " triangles.\n";
 }

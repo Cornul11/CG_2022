@@ -10,19 +10,16 @@
 #include <string>
 #include <vector>
 
-class OBJLoader
-{
+class OBJLoader {
     bool d_hasTexCoords;
 
-    struct vec3
-    {
+    struct vec3 {
         float x;
         float y;
         float z;
     };
 
-    struct vec2
-    {
+    struct vec2 {
         float u;
         float v;
     };
@@ -37,8 +34,7 @@ class OBJLoader
      * QVectors to be able to reconstruct
      * the model
      */
-    struct Vertex_idx
-    {
+    struct Vertex_idx {
         size_t d_coord;
         size_t d_norm;
         size_t d_tex;
@@ -48,47 +44,47 @@ class OBJLoader
 
     typedef std::vector<std::string> StringList;
 
-    public:
+public:
 
-        /**
-         * @brief OBJLoader
-         * @param filename
-         */
-        explicit OBJLoader(std::string const &filename);
+    /**
+     * @brief OBJLoader
+     * @param filename
+     */
+    explicit OBJLoader(std::string const &filename);
 
-        /**
-         * @brief vertex_data
-         * @return interleaved vertex data, see vertex.h
-         *
-         * @note texCoord is only valid when hasTexCoords() returns
-         *  true
-         */
-        std::vector<Vertex> vertex_data() const;
+    /**
+     * @brief vertex_data
+     * @return interleaved vertex data, see vertex.h
+     *
+     * @note texCoord is only valid when hasTexCoords() returns
+     *  true
+     */
+    std::vector<Vertex> vertex_data() const;
 
-        unsigned numTriangles() const;
+    unsigned numTriangles() const;
 
-        bool hasTexCoords() const;
+    bool hasTexCoords() const;
 
-        /**
-         * @brief unitize: scale mesh to fit in a [-1, 1]^3 cube
-         * and translate it to the origin.
-         *
-         * This function can be implemented as an optional extension.
-         */
-        void unitize();
+    /**
+     * @brief unitize: scale mesh to fit in a [-1, 1]^3 cube
+     * and translate it to the origin.
+     *
+     * This function can be implemented as an optional extension.
+     */
+    void unitize();
 
-    private:
+private:
 
-        void parseFile(std::string const &filename);
-        void parseLine(std::string const &line);
-        void parseVertex(StringList const &tokens);
-        void parseNormal(StringList const &tokens);
-        void parseTexCoord(StringList const &tokens);
-        void parseFace(StringList const &tokens);
+    void parseFile(std::string const &filename);
+    void parseLine(std::string const &line);
+    void parseVertex(StringList const &tokens);
+    void parseNormal(StringList const &tokens);
+    void parseTexCoord(StringList const &tokens);
+    void parseFace(StringList const &tokens);
 
-        StringList split(std::string const &str,
-                         char splitChar,
-                         bool keepEmpty = true);
+    StringList split(std::string const &str,
+                     char splitChar,
+                     bool keepEmpty = true);
 };
 
 #endif // OBJLOADER_H_

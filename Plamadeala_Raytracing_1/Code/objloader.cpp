@@ -16,9 +16,8 @@ using namespace std;
 // --- Public --------------------------------------------------------
 
 OBJLoader::OBJLoader(string const &filename)
-:
-    d_hasTexCoords(false)
-{
+    :
+    d_hasTexCoords(false) {
     parseFile(filename);
 }
 
@@ -28,13 +27,11 @@ OBJLoader::OBJLoader(string const &filename)
 
 // --- Public --------------------------------------------------------
 
-vector<Vertex> OBJLoader::vertex_data() const
-{
+vector<Vertex> OBJLoader::vertex_data() const {
     vector<Vertex> data;
 
     // For all vertices in the model, interleave the data
-    for (Vertex_idx const &vertex : d_vertices)
-    {
+    for (Vertex_idx const &vertex : d_vertices) {
         // Add coordinate data
         Vertex vert;
 
@@ -50,8 +47,7 @@ vector<Vertex> OBJLoader::vertex_data() const
         vert.nz = norm.z;
 
         // Add texture data (if available)
-        if (d_hasTexCoords)
-        {
+        if (d_hasTexCoords) {
             vec2 const tex = d_texCoords.at(vertex.d_tex);
             vert.u = tex.u;      // u coordinate
             vert.v = tex.v;      // v coordinate
@@ -65,18 +61,15 @@ vector<Vertex> OBJLoader::vertex_data() const
     return data;    // copy elision
 }
 
-unsigned OBJLoader::numTriangles() const
-{
+unsigned OBJLoader::numTriangles() const {
     return d_vertices.size() / 3U;
 }
 
-bool OBJLoader::hasTexCoords() const
-{
+bool OBJLoader::hasTexCoords() const {
     return d_hasTexCoords;
 }
 
-void OBJLoader::unitize()
-{
+void OBJLoader::unitize() {
     // This is a very handy function for importing models
     // which you may reuse in other projects.
     // You may have noticed you can use arbitrary sizes for your
@@ -102,13 +95,11 @@ void OBJLoader::unitize()
 
 // --- Private -------------------------------------------------------
 
-void OBJLoader::parseFile(string const &filename)
-{
+void OBJLoader::parseFile(string const &filename) {
     ifstream file(filename);
-    if (file)
-    {
+    if (file) {
         string line;
-        while(getline(file, line))
+        while (getline(file, line))
             parseLine(line);
 
     } else {
@@ -116,8 +107,7 @@ void OBJLoader::parseFile(string const &filename)
     }
 }
 
-void OBJLoader::parseLine(string const &line)
-{
+void OBJLoader::parseLine(string const &line) {
     if (line[0] == '#')
         return;                     // ignore comments
 
@@ -135,8 +125,7 @@ void OBJLoader::parseLine(string const &line)
     // Other data is also ignored
 }
 
-void OBJLoader::parseVertex(StringList const &tokens)
-{
+void OBJLoader::parseVertex(StringList const &tokens) {
     float x, y, z;
     x = stof(tokens.at(1));         // 0 is the "v" token
     y = stof(tokens.at(2));
@@ -144,8 +133,7 @@ void OBJLoader::parseVertex(StringList const &tokens)
     d_coordinates.push_back(vec3{x, y, z});
 }
 
-void OBJLoader::parseNormal(StringList const &tokens)
-{
+void OBJLoader::parseNormal(StringList const &tokens) {
     float x, y, z;
     x = stof(tokens.at(1));         // 0 is the "vn" token
     y = stof(tokens.at(2));
@@ -153,8 +141,7 @@ void OBJLoader::parseNormal(StringList const &tokens)
     d_normals.push_back(vec3{x, y, z});
 }
 
-void OBJLoader::parseTexCoord(StringList const &tokens)
-{
+void OBJLoader::parseTexCoord(StringList const &tokens) {
     d_hasTexCoords = true;          // Texture data will be read
 
     float u, v;
@@ -163,17 +150,15 @@ void OBJLoader::parseTexCoord(StringList const &tokens)
     d_texCoords.push_back(vec2{u, v});
 }
 
-void OBJLoader::parseFace(StringList const &tokens)
-{
+void OBJLoader::parseFace(StringList const &tokens) {
     // skip the first token ("f")
-    for (size_t idx = 1; idx < tokens.size(); ++idx)
-    {
+    for (size_t idx = 1; idx < tokens.size(); ++idx) {
         // format is:
         // <vertex idx + 1>/<texture idx +1>/<normal idx + 1>
         // Wavefront .obj files start counting from 1 (yuck)
 
         StringList elements = split(tokens.at(idx), '/');
-        Vertex_idx vertex {}; // initialize to zeros on all fields
+        Vertex_idx vertex{}; // initialize to zeros on all fields
 
         vertex.d_coord = stoul(elements.at(0)) - 1U;
 
@@ -189,9 +174,8 @@ void OBJLoader::parseFace(StringList const &tokens)
 }
 
 OBJLoader::StringList OBJLoader::split(string const &line,
-                            char splitChar,
-                            bool keepEmpty)
-{
+                                       char splitChar,
+                                       bool keepEmpty) {
     StringList tokens;
     istringstream iss(line);
     string token;

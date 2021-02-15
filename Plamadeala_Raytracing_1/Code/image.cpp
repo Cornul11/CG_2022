@@ -7,67 +7,55 @@
 using namespace std;
 
 Image::Image(unsigned width, unsigned height)
-:
+    :
     d_pixels(width * height),
     d_width(width),
-    d_height(height)
-{}
+    d_height(height) {}
 
-Image::Image(string const &filename)
-{
+Image::Image(string const &filename) {
     read_png(filename);
 }
 
 // normal accessors
-void Image::put_pixel(unsigned x, unsigned y, Color const &c)
-{
+void Image::put_pixel(unsigned x, unsigned y, Color const &c) {
     (*this)(x, y) = c;
 }
-Color Image::get_pixel(unsigned x, unsigned y) const
-{
+Color Image::get_pixel(unsigned x, unsigned y) const {
     return (*this)(x, y);
 }
 
 // Handier accessors
 // Usage: color = img(x,y);
 //        img(x,y) = color;
-Color const&Image::operator()(unsigned x, unsigned y) const
-{
+Color const &Image::operator()(unsigned x, unsigned y) const {
     return d_pixels.at(index(x, y));
 }
-Color &Image::operator()(unsigned x, unsigned y)
-{
+Color &Image::operator()(unsigned x, unsigned y) {
     return d_pixels.at(index(x, y));
 }
 
-unsigned Image::width() const
-{
+unsigned Image::width() const {
     return d_width;
 }
 
-unsigned Image::height() const
-{
+unsigned Image::height() const {
     return d_height;
 }
 
-unsigned Image::size() const
-{
+unsigned Image::size() const {
     return d_width * d_height;
 }
 
 // Normalized accessors, unsignederval is (0...1, 0...1)
 // useful for texture access
-Color const &Image::colorAt(float x, float y) const
-{
+Color const &Image::colorAt(float x, float y) const {
     return d_pixels.at(findex(x, y));
 }
 
-void Image::write_png(std::string const &filename) const
-{
+void Image::write_png(std::string const &filename) const {
     vector<unsigned char> image;
     image.reserve(size() * 4);  // reserves size (less allocations)
-    for (Color pixel : d_pixels)
-    {
+    for (Color pixel : d_pixels) {
         image.push_back(static_cast<unsigned char>(pixel.r * 255.0));
         image.push_back(static_cast<unsigned char>(pixel.g * 255.0));
         image.push_back(static_cast<unsigned char>(pixel.b * 255.0));
@@ -77,15 +65,13 @@ void Image::write_png(std::string const &filename) const
     lodepng::encode(filename, image, d_width, d_height);
 }
 
-void Image::read_png(std::string const &filename)
-{
+void Image::read_png(std::string const &filename) {
     vector<unsigned char> image;
     lodepng::decode(image, d_width, d_height, filename);
     d_pixels.reserve(size());
 
     auto imgIter = image.begin();
-    while (imgIter != image.end())
-    {
+    while (imgIter != image.end()) {
         double r = (*imgIter) / 255.0;
         ++imgIter;
         double g = (*imgIter) / 255.0;

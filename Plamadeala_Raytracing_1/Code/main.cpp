@@ -5,12 +5,10 @@
 
 using namespace std;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     cout << "Computer Graphics - Ray tracer\n\n";
 
-    if (argc < 2 || argc > 3)
-    {
+    if (argc < 2 || argc > 3) {
         cerr << "Usage: " << argv[0] << " in-file [out-file.png]\n";
         return 1;
     }
@@ -18,21 +16,17 @@ int main(int argc, char *argv[])
     Raytracer raytracer;
 
     // read the scene
-    if (!raytracer.readScene(argv[1]))
-    {
+    if (!raytracer.readScene(argv[1])) {
         cerr << "Error: reading scene from " << argv[1] <<
-            " failed - no output generated.\n";
+             " failed - no output generated.\n";
         return 1;
     }
 
     // determine output name
     string ofname;
-    if (argc >= 3)
-    {
+    if (argc >= 3) {
         ofname = argv[2];   // use the provided name
-    }
-    else
-    {
+    } else {
         ofname = argv[1];   // replace .json with .png
         ofname.erase(ofname.begin() + ofname.find_last_of('.'), ofname.end());
         ofname += ".png";
