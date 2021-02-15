@@ -4,6 +4,21 @@
 
 using namespace std;
 
+bool solveABC(double &a, double &b, double &c, double &x0, double &x1) {
+
+    double det = pow(b, 2) - (4 * a * c);
+
+    if (det < 0) {
+        return false;
+    } else if (det == 0) {
+        x0 = -(b / (2 * a));
+    } else {
+        x0 = (-b + sqrt(det)) / (2 * a);
+        x1 = (-b - sqrt(det)) / (2 * a);
+    }
+    return true;
+}
+
 Hit Sphere::intersect(Ray const &ray)
 {
     /****************************************************
@@ -22,12 +37,29 @@ Hit Sphere::intersect(Ray const &ray)
     * intersection point from the ray origin in *t (see example).
     ****************************************************/
 
-    // Placeholder for actual intersection calculation.
-    Vector originToPosition = (position - ray.O).normalized();
-    if (originToPosition.dot(ray.D) < 0.999)
-        return Hit::NO_HIT();
+    // Intersection calculation
+    Vector OC = ray.O - position;
+    double t;
+    double x0;
+    double x1;
 
-    double t = 1000;
+    double a = ray.D.dot(ray.D);
+    double b = 2 * (ray.D.dot(OC));
+    double c = (OC.dot(OC)) - (r * r);
+
+    if (!solveABC(a, b, c, x0, x1)) {
+        return Hit::NO_HIT();
+    } else {
+        if (x0 < 0 && x1 < 0) {
+            return Hit::NO_HIT();
+        }
+
+        if (x0 > x1 && x1 > 0 && x0 > 0) {
+            std::swap(x0, x1);
+        }
+
+        t = x0;
+    }
 
     /****************************************************
     * RT1.2: NORMAL CALCULATION
@@ -38,7 +70,8 @@ Hit Sphere::intersect(Ray const &ray)
     * Insert calculation of the sphere's normal at the intersection point.
     ****************************************************/
 
-    Vector N /* = ... */;
+    Vector hitPoint = ray.O + ray.D * t;
+    Vector N = (hitPoint - position).normalized();
 
     return Hit(t, N);
 }
