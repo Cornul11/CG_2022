@@ -2,3 +2,4 @@ cmake-build-debug/
 placeholder
 .idea/
 *.zip
+*.png
