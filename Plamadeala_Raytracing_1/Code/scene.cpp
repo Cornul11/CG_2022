@@ -58,12 +58,15 @@ Color Scene::trace(Ray const &ray) {
     Color I_a = material.color * material.ka;
     Color I_d;
     Color I_s;
-
     for (auto &light : lights) {
         L = (light->position - hit).normalized();
-        R = (2 * N.dot(L) * N - L).normalized();
+        R = (2 * max(0.0, N.dot(L)) * N - L).normalized();
         I_d = max(0.0, L.dot(N)) * material.color * light->color * material.kd;
-        I_s = pow(max(0.0, R.dot(V)), material.n) * light->color * material.ks;
+        if (N.dot(L) > 0) {
+            I_s = pow(max(0.0, R.dot(V)), material.n) * light->color * material.ks;
+        } else {
+            I_d = Triple(0, 0, 0);
+        }
         color += I_d + I_s;
     }
 
