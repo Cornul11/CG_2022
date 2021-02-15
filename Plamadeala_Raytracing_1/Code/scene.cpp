@@ -49,7 +49,25 @@ Color Scene::trace(Ray const &ray) {
     *        pow(a,b)           a to the power of b
     ****************************************************/
 
-    Color color = material.color;               // placeholder
+    Color color = Color(0.0, 0.0, 0.0);
+
+    if (N.dot(V) < 0.0) N *= -1; // ray inside a sphere
+
+    Vector L;
+    Vector R;
+    Color I_a = material.color * material.ka;
+    Color I_d;
+    Color I_s;
+
+    for (auto &light : lights) {
+        L = (light->position - hit).normalized();
+        R = (2 * N.dot(L) * N - L).normalized();
+        I_d = max(0.0, L.dot(N)) * material.color * light->color * material.kd;
+        I_s = pow(max(0.0, R.dot(V)), material.n) * light->color * material.ks;
+        color += I_d + I_s;
+    }
+
+    color += I_a;
 
     return color;
 }
