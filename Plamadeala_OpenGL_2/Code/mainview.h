@@ -2,6 +2,7 @@
 #define MAINVIEW_H
 
 #include "model.h"
+#include "vertex.h"
 
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -11,12 +12,34 @@
 #include <QOpenGLShaderProgram>
 #include <QTimer>
 #include <QVector3D>
-#include <QMatrix4x4>
 #include <memory>
 
-
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
-    Q_OBJECT
+Q_OBJECT
+
+    int globalRotateX;
+    int globalRotateY;
+    int globalRotateZ;
+    float globalScale;
+
+    GLuint VBOCube;
+    GLuint VAOCube;
+    GLuint VBOPyramid;
+    GLuint VAOPyramid;
+    GLuint VBOSphere;
+    GLuint VAOSphere;
+
+    GLint modelLocation;
+    GLint projectionLocation;
+
+    QMatrix4x4 projectTransform;
+    QMatrix4x4 transformCube;
+    QMatrix4x4 transformPyramid;
+    QMatrix4x4 transformSphere;
+
+    std::vector<Vertex> vertexArrayCube;
+    std::vector<Vertex> vertexArrayPyramid;
+    std::vector<Vertex> vertexArraySphere;
 
 public:
     enum ShadingMode : GLuint {
@@ -35,7 +58,8 @@ protected:
     void initializeGL();
     void resizeGL(int newWidth, int newHeight);
     void paintGL();
-
+    void rotateFunction(int x, int y, int z);
+    void scaleFunction(float s);
     // Functions for keyboard input events
     void keyPressEvent(QKeyEvent *ev);
     void keyReleaseEvent(QKeyEvent *ev);
@@ -46,37 +70,24 @@ protected:
     void mousePressEvent(QMouseEvent *ev);
     void mouseReleaseEvent(QMouseEvent *ev);
     void wheelEvent(QWheelEvent *ev);
+    QVector<quint8> imageToBytes(QImage image);
 
 private slots:
-    void onMessageLogged(QOpenGLDebugMessage Message);
+    static void onMessageLogged(const QOpenGLDebugMessage &Message);
 
 private:
     QOpenGLDebugLogger debugLogger;
     QTimer timer; // timer used for animation
 
     QOpenGLShaderProgram shaderProgram;
-    GLint uniformModelViewTransform;
-    GLint uniformProjectionTransform;
-
-    // Mesh values
-    GLuint meshVAO;
-    GLuint meshVBO;
-    GLuint meshSize;
-    QMatrix4x4 meshTransform;
-
-    // Transforms
-    float scale = 1.f;
-    QVector3D rotation;
-    QMatrix4x4 projectionTransform;
 
     void createShaderProgram();
-    void loadMesh();
-
-    void destroyModelBuffers();
-    QVector<quint8> imageToBytes(QImage image);
-
-    void updateProjectionTransform();
-    void updateModelTransforms();
+    QVector<QVector3D> sphereVertices;
+    int sphereSize;
+    void sendVertexData(std::vector<Vertex> sphere,
+                        std::vector<Vertex> cube,
+                        std::vector<Vertex> pyramid);
+    void defineObjects();
 };
 
 #endif // MAINVIEW_H

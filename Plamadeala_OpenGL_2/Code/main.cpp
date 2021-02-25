@@ -1,12 +1,12 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QSurfaceFormat>
-#include <ctime>
 
 int main(int argc, char *argv[])
 {
-    std::srand(std::time(nullptr));
     QApplication a(argc, argv);
+
+    std::srand(std::time(nullptr));
 
     // Request OpenGL 3.3 Core
     QSurfaceFormat glFormat;
@@ -22,5 +22,5 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    return a.exec();
+    return QApplication::exec();
 }

@@ -49,7 +49,6 @@ public:
 private:
     // A Vertex class for vertex comparison
     struct Vertex {
-
         QVector3D coord;
         QVector3D normal;
         QVector2D texCoord;
@@ -94,8 +93,8 @@ private:
     QVector<QVector3D> norm;
     QVector<QVector2D> tex;
 
-    bool hNorms = false;
-    bool hTexs = false;
+    bool hNorms;
+    bool hTexs;
 };
 
 #endif // MODEL_H

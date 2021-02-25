@@ -8,7 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow()
+{
     delete ui;
 }
 
@@ -23,19 +24,19 @@ void MainWindow::on_ResetRotationButton_clicked(bool checked) {
     ui->mainView->setRotation(0, 0, 0);
 }
 
-void MainWindow::on_RotationDialX_valueChanged(int value) {
+void MainWindow::on_RotationDialX_sliderMoved(int value) {
     ui->mainView->setRotation(value,
                               ui->RotationDialY->value(),
                               ui->RotationDialZ->value());
 }
 
-void MainWindow::on_RotationDialY_valueChanged(int value) {
+void MainWindow::on_RotationDialY_sliderMoved(int value) {
     ui->mainView->setRotation(ui->RotationDialX->value(),
                               value,
                               ui->RotationDialZ->value());
 }
 
-void MainWindow::on_RotationDialZ_valueChanged(int value) {
+void MainWindow::on_RotationDialZ_sliderMoved(int value) {
     ui->mainView->setRotation(ui->RotationDialX->value(),
                               ui->RotationDialY->value(),
                               value);
@@ -47,7 +48,7 @@ void MainWindow::on_ResetScaleButton_clicked(bool checked) {
     ui->mainView->setScale(100);
 }
 
-void MainWindow::on_ScaleSlider_valueChanged(int value) {
+void MainWindow::on_ScaleSlider_sliderMoved(int value) {
     ui->mainView->setScale(value);
 }
 
