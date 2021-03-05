@@ -10,13 +10,13 @@ Model::Model(QString filename) {
 
     qDebug() << ":: Loading model:" << filename;
     QFile file(filename);
-    if(file.open(QIODevice::ReadOnly)) {
+    if (file.open(QIODevice::ReadOnly)) {
         QTextStream in(&file);
 
         QString line;
         QStringList tokens;
 
-        while(!in.atEnd()) {
+        while (!in.atEnd()) {
             line = in.readLine();
             if (line.startsWith("#")) continue; // skip comments
 
@@ -27,15 +27,15 @@ Model::Model(QString filename) {
                 parseVertex(tokens);
             }
 
-            if (tokens[0] == "vn" ) {
+            if (tokens[0] == "vn") {
                 parseNormal(tokens);
             }
 
-            if (tokens[0] == "vt" ) {
+            if (tokens[0] == "vt") {
                 parseTexture(tokens);
             }
 
-            if (tokens[0] == "f" ) {
+            if (tokens[0] == "f") {
                 parseFace(tokens);
             }
         }
@@ -128,7 +128,7 @@ QVector<QVector2D> Model::getTextureCoords_indexed() {
     return textureCoords_indexed;
 }
 
-QVector<unsigned>  Model::getIndices() {
+QVector<unsigned> Model::getIndices() {
     return indices;
 }
 
@@ -206,8 +206,6 @@ QVector<float> Model::getVNTInterleaved_indexed() {
     return buffer;
 }
 
-
-
 /**
  * @brief Model::getNumTriangles
  *
@@ -216,52 +214,51 @@ QVector<float> Model::getVNTInterleaved_indexed() {
  * @return number of triangles
  */
 int Model::getNumTriangles() {
-    return vertices.size()/3;
+    return vertices.size() / 3;
 }
 
 void Model::parseVertex(QStringList tokens) {
-    float x,y,z;
+    float x, y, z;
     x = tokens[1].toFloat();
     y = tokens[2].toFloat();
     z = tokens[3].toFloat();
-    vertices_indexed.append(QVector3D(x,y,z));
+    vertices_indexed.append(QVector3D(x, y, z));
 }
 
 void Model::parseNormal(QStringList tokens) {
     hNorms = true;
-    float x,y,z;
+    float x, y, z;
     x = tokens[1].toFloat();
     y = tokens[2].toFloat();
     z = tokens[3].toFloat();
-    norm.append(QVector3D(x,y,z));
+    norm.append(QVector3D(x, y, z));
 }
 
 void Model::parseTexture(QStringList tokens) {
     hTexs = true;
-    float u,v;
+    float u, v;
     u = tokens[1].toFloat();
     v = tokens[2].toFloat();
-    tex.append(QVector2D(u,v));
+    tex.append(QVector2D(u, v));
 }
 
 void Model::parseFace(QStringList tokens) {
     QStringList elements;
 
-    for( int i = 1; i != tokens.size(); ++i ) {
+    for (int i = 1; i != tokens.size(); ++i) {
         elements = tokens[i].split("/");
         // -1 since .obj count from 1
-        indices.append(elements[0].toInt()-1);
+        indices.append(elements[0].toInt() - 1);
 
-        if ( elements.size() > 1 && ! elements[1].isEmpty() ) {
-            texcoord_indices.append(elements[1].toInt()-1);
+        if (elements.size() > 1 && !elements[1].isEmpty()) {
+            texcoord_indices.append(elements[1].toInt() - 1);
         }
 
-        if (elements.size() > 2 && ! elements[2].isEmpty() ) {
-            normal_indices.append(elements[2].toInt()-1);
+        if (elements.size() > 2 && !elements[2].isEmpty()) {
+            normal_indices.append(elements[2].toInt() - 1);
         }
     }
 }
-
 
 /**
  * @brief Model::alignData
@@ -287,17 +284,17 @@ void Model::alignData() {
     for (int i = 0; i != indices.size(); ++i) {
         QVector3D v = vertices_indexed[indices[i]];
 
-        QVector3D n = QVector2D(0,0);
-        if ( hNorms ) {
+        QVector3D n = QVector2D(0, 0);
+        if (hNorms) {
             n = norm[normal_indices[i]];
         }
 
-        QVector2D t = QVector2D(0,0);
-        if ( hTexs ) {
+        QVector2D t = QVector2D(0, 0);
+        if (hTexs) {
             t = tex[texcoord_indices[i]];
         }
 
-        Vertex k = Vertex(v,n,t);
+        Vertex k = Vertex(v, n, t);
         if (vs.contains(k)) {
             // Vertex already exists, use that index
             ind.append(vs.indexOf(k));
@@ -334,14 +331,14 @@ void Model::unpackIndexes() {
     vertices.clear();
     normals.clear();
     textureCoords.clear();
-    for ( int i = 0; i != indices.size(); ++i ) {
+    for (int i = 0; i != indices.size(); ++i) {
         vertices.append(vertices_indexed[indices[i]]);
 
-        if ( hNorms ) {
+        if (hNorms) {
             normals.append(norm[normal_indices[i]]);
         }
 
-        if ( hTexs ) {
+        if (hTexs) {
             textureCoords.append(tex[texcoord_indices[i]]);
         }
     }

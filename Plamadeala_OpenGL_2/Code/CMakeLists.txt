@@ -25,8 +25,12 @@ add_executable(Code
         user_input.cpp
         utility.cpp
         vertex.h
-        shaders/fragshader.glsl
-        shaders/vertshader.glsl
+        shaders/normal_fragshader.glsl
+        shaders/normal_vertshader.glsl
+        shaders/phong_fragshader.glsl
+        shaders/phong_vertshader.glsl
+        shaders/gouraud_fragshader.glsl
+        shaders/gouraud_vertshader.glsl
         resources.qrc
         )
 

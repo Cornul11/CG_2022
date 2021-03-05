@@ -22,24 +22,18 @@ Q_OBJECT
     int globalRotateZ;
     float globalScale;
 
-    GLuint VBOCube;
-    GLuint VAOCube;
-    GLuint VBOPyramid;
-    GLuint VAOPyramid;
-    GLuint VBOSphere;
-    GLuint VAOSphere;
+    GLuint VBOCat;
+    GLuint VAOCat;
 
-    GLint modelLocation;
-    GLint projectionLocation;
+    GLint modelLocation[3];
+    GLint projectionLocation[3];
+    GLint normalLocation[3];
+    GLint exponentLocation;
 
     QMatrix4x4 projectTransform;
-    QMatrix4x4 transformCube;
-    QMatrix4x4 transformPyramid;
-    QMatrix4x4 transformSphere;
+    QMatrix4x4 catTransform;
 
-    std::vector<Vertex> vertexArrayCube;
-    std::vector<Vertex> vertexArrayPyramid;
-    std::vector<Vertex> vertexArraySphere;
+    std::vector<Vertex> catVertexArray;
 
 public:
     enum ShadingMode : GLuint {
@@ -51,7 +45,7 @@ public:
 
     // Functions for widget input events
     void setRotation(int rotateX, int rotateY, int rotateZ);
-    void setScale(int scale);
+    void setScale(int newScale);
     void setShadingMode(ShadingMode shading);
 
 protected:
@@ -76,18 +70,31 @@ private slots:
     static void onMessageLogged(const QOpenGLDebugMessage &Message);
 
 private:
+    QImage image;
+    QVector<quint8> imageData;
+
     QOpenGLDebugLogger debugLogger;
     QTimer timer; // timer used for animation
 
-    QOpenGLShaderProgram shaderProgram;
+    QOpenGLShaderProgram shaderProgram[3];
+    int activeShaderProgram = ShadingMode::NORMAL;
+
+    GLuint catTexture;
+    int catSize;
+    QVector<QVector3D> catVertices;
+
+    float scale = 1.f;
+    float aspectRatio;
+    QVector3D rotation;
+
+    void updateCatTransform();
+    void updateProjectTransform();
+
+    void loadTexture(const QString& file, GLuint texturePtr);
 
     void createShaderProgram();
-    QVector<QVector3D> sphereVertices;
-    int sphereSize;
-    void sendVertexData(std::vector<Vertex> sphere,
-                        std::vector<Vertex> cube,
-                        std::vector<Vertex> pyramid);
-    void defineObjects();
+    void sendVertexData(std::vector<Vertex> cat);
+    void loadMesh();
 };
 
 #endif // MAINVIEW_H

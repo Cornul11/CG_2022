@@ -13,17 +13,6 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
     qDebug() << "MainView constructor";
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(update()));
-
-    transformCube.translate(2, 0, -6);
-    transformPyramid.translate(-2, 0, -6);
-    transformSphere.translate(0, 0, -10);
-
-    projectTransform.perspective(60.0f, 1.0f, 1.0f, 100);
-
-    globalRotateX = 0;
-    globalRotateY = 0;
-    globalRotateZ = 0;
-    globalScale = 1;
 }
 
 /**
@@ -36,17 +25,10 @@ MainView::MainView(QWidget *parent) : QOpenGLWidget(parent) {
  */
 MainView::~MainView() {
     qDebug() << "MainView destructor";
-
-    glDeleteBuffers(1, &VBOCube);
-    glDeleteVertexArrays(1, &VAOCube);
-
-    glDeleteBuffers(1, &VBOPyramid);
-    glDeleteVertexArrays(1, &VAOPyramid);
-
-    glDeleteBuffers(1, &VBOSphere);
-    glDeleteVertexArrays(1, &VAOSphere);
-
     makeCurrent();
+
+    glDeleteBuffers(1, &VBOCat);
+    glDeleteVertexArrays(1, &VAOCat);
 }
 
 // --- OpenGL initialization
@@ -87,61 +69,52 @@ void MainView::initializeGL() {
 
     createShaderProgram();
 
-    defineObjects();
+    loadMesh();
+    loadTexture(":/textures/cat_diff.png", catTexture);
 
-    sendVertexData(vertexArraySphere, vertexArrayCube, vertexArrayPyramid);
+    sendVertexData(catVertexArray);
+
+    updateProjectTransform();
+    updateCatTransform();
 }
 
-void MainView::defineObjects() {
+void MainView::loadMesh() {
     // load sphere object
-    Model sphereModel = Model(QString(":/models/sphere.obj"));
-    sphereModel.unitize();
+    Model catModel(":/models/cat.obj");
+    catModel.unitize();
 
-    sphereVertices = sphereModel.getVertices();
-    sphereSize = sphereVertices.size();
 
-    vertexArraySphere.reserve(sphereSize);
-    for (int i = 0; i < sphereSize; i++) {
-        vertexArraySphere.emplace_back(QVector3D(sphereVertices[i].x(),
-                                                 sphereVertices[i].y(),
-                                                 sphereVertices[i].z()),
-                                                 QVector3D(rand() / double(RAND_MAX),
-                                                 rand() / double(RAND_MAX),
-                                                 rand() / double(RAND_MAX)));
+    catVertices = catModel.getVertices();
+    catSize = catVertices.size();
+    auto catNormals = catModel.getNormals();
+    auto catTextureCoords = catModel.getTextureCoords();
+    catVertexArray.reserve(8 * catSize);
+
+    for (int i = 0; i < catSize; ++i) {
+        catVertexArray.emplace_back(Vertex(catVertices[i],
+                                           catNormals[i],
+                                           catTextureCoords[i]));
     }
+}
 
-    // define the vertices that will be used for the square and the pyramid
-    Vertex v1 = Vertex(QVector3D(-1.0f, 1.0f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f));
-    Vertex v2 = Vertex(QVector3D(-1.0f, -1.0f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f));
-    Vertex v3 = Vertex(QVector3D(1.0f, -1.0f, 1.0f), QVector3D(0.0f, 0.0f, 1.0f));
-    Vertex v4 = Vertex(QVector3D(1.0f, 1.0f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f));
-    Vertex v5 = Vertex(QVector3D(-1.0f, 1.0f, -1.0f), QVector3D(1.0f, 0.0f, 0.0f));
-    Vertex v6 = Vertex(QVector3D(-1.0f, -1.0f, -1.0f), QVector3D(0.0f, 1.0f, 0.0f));
-    Vertex v7 = Vertex(QVector3D(1.0f, -1.0f, -1.0f), QVector3D(0.0f, 0.0f, 1.0f));
-    Vertex v8 = Vertex(QVector3D(1.0f, 1.0f, -1.0f), QVector3D(1.0f, 0.0f, 0.0f));
-    Vertex v9 = Vertex(QVector3D(0.0f, 1.0f, 0.0f), QVector3D(1.0f, 0.0f, 0.0f));
+void MainView::loadTexture(const QString &file, GLuint texturePtr) {
+    glGenTextures(1, &texturePtr);
+    glBindTexture(GL_TEXTURE_2D, texturePtr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // define the triangles of the cube
-    vertexArrayCube = {v1, v2, v3,
-                       v3, v4, v1,
-                       v1, v4, v5,
-                       v4, v8, v5,
-                       v1, v5, v6,
-                       v1, v6, v2,
-                       v2, v6, v7,
-                       v2, v7, v3,
-                       v4, v3, v7,
-                       v4, v7, v8,
-                       v5, v8, v7,
-                       v5, v7, v6};
+    image = QImage(file);
+    imageData = imageToBytes(image);
 
-    // define the triangles of the pyramid
-    vertexArrayPyramid = {v2, v6, v7,
-                          v2, v7, v3,
-                          v9, v2, v3,
-                          v9, v3, v7,
-                          v9, v7, v6,
-                          v9, v6, v2};
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGBA8,
+                 image.width(),
+                 image.height(),
+                 0,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 imageData.data());
 }
 
 /**
@@ -149,75 +122,86 @@ void MainView::defineObjects() {
  *
  * Called upon OpenGL initialization
  * Sends the layout of the data and the data itself to the GPU
- * @param sphere
+ * @param cat
  * @param cube
  * @param pyramid
  */
-void MainView::sendVertexData(std::vector<Vertex> sphere,
-                              std::vector<Vertex> cube,
-                              std::vector<Vertex> pyramid) {
-    // CUBE
-    Vertex localVertexArrayCube[cube.size()];
-    std::copy(cube.begin(), cube.end(), localVertexArrayCube);
-    // VBO
-    glGenBuffers(1, &VBOCube);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOCube);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArrayCube), localVertexArrayCube, GL_STATIC_DRAW);
-    // VAO
-    glGenVertexArrays(1, &VAOCube);
-    glBindVertexArray(VAOCube);
+void MainView::sendVertexData(std::vector<Vertex> cat) {
+    makeCurrent();
+
+    // Cat
+    Vertex localVertexArrayCat[cat.size()];
+    std::copy(cat.begin(), cat.end(), localVertexArrayCat);
+
+    // Generate VAO
+    glGenVertexArrays(1, &VAOCat);
+    glBindVertexArray(VAOCat);
+
+    // Generate VBO
+    glGenBuffers(1, &VBOCat);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOCat);
+
+    // Write the data to the buffer
+    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArrayCat), localVertexArrayCat, GL_STATIC_DRAW);
+
     // Telling the GPU the layout of the data
+
+    // Set vertex coordinates to location 0
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
+
+    // Set colour coordinates to location 1
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
+    // Set texture coordinates to location 2
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
-    // PYRAMID
-    Vertex localVertexArrayPyramid[pyramid.size()];
-    std::copy(pyramid.begin(), pyramid.end(), localVertexArrayPyramid);
-    // VBO
-    glGenBuffers(1, &VBOPyramid);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOPyramid);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArrayPyramid), localVertexArrayPyramid, GL_STATIC_DRAW);
-    // VAO
-    glGenVertexArrays(1, &VAOPyramid);
-    glBindVertexArray(VAOPyramid);
-    // Telling the GPU the layout of the data
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
-
-    // SPHERE
-    Vertex localVertexArraySphere[sphere.size()];
-    std::copy(sphere.begin(), sphere.end(), localVertexArraySphere);
-    // VBO
-    glGenBuffers(1, &VBOSphere);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOSphere);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(localVertexArraySphere), localVertexArraySphere, GL_STATIC_DRAW);
-    // VAO
-    glGenVertexArrays(1, &VAOSphere);
-    glBindVertexArray(VAOSphere);
-    // Telling the GPU the layout of the data
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) nullptr);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) (3 * sizeof(GLfloat)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 void MainView::createShaderProgram() {
-    // Create shader program
-    shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                          ":/shaders/vertshader.glsl");
-    shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                          ":/shaders/fragshader.glsl");
-    shaderProgram.link();
+    /* 0 for phong
+     * 1 for normal
+     * 2 for gouraud */
 
-    modelLocation = shaderProgram.uniformLocation("modelTransform");
-    projectionLocation = shaderProgram.uniformLocation("projectionTransform");
+    // Create shader program
+
+    shaderProgram[ShadingMode::PHONG].addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                               ":/shaders/phong_vertshader.glsl");
+    shaderProgram[ShadingMode::PHONG].addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                                               ":/shaders/phong_fragshader.glsl");
+    shaderProgram[ShadingMode::PHONG].link();
+
+    modelLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("modelTransform");
+    projectionLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("projectionTransform");
+    normalLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("normalTransform");
+
+    shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                               ":/shaders/normal_vertshader.glsl");
+    shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                                               ":/shaders/normal_fragshader.glsl");
+
+
+    shaderProgram[ShadingMode::NORMAL].link();
+
+    modelLocation[ShadingMode::NORMAL] = shaderProgram[ShadingMode::NORMAL].uniformLocation("modelTransform");
+    projectionLocation[ShadingMode::NORMAL] = shaderProgram[ShadingMode::NORMAL].uniformLocation("projectionTransform");
+    normalLocation[ShadingMode::NORMAL] = shaderProgram[ShadingMode::NORMAL].uniformLocation("normalTransform");
+
+    shaderProgram[ShadingMode::GOURAUD].addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                                ":/shaders/gouraud_vertshader.glsl");
+    shaderProgram[ShadingMode::GOURAUD].addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                                                ":/shaders/gouraud_fragshader.glsl");
+
+    shaderProgram[ShadingMode::GOURAUD].link();
+
+    exponentLocation = shaderProgram[ShadingMode::PHONG].uniformLocation("exponent");
+    modelLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("modelTransform");
+    projectionLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("projectionTransform");
+    normalLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("normalTransform");
 }
 
 // --- OpenGL drawing
@@ -232,46 +216,28 @@ void MainView::paintGL() {
     // Clear the screen before rendering
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shaderProgram.bind();
+    QMatrix3x3 normalTransformation = catTransform.normalMatrix();
+    shaderProgram[activeShaderProgram].bind();
+    if (activeShaderProgram == ShadingMode::PHONG) {
+        GLfloat lightPositionMatrix[3] = {75.0, 75.0, 50.0};
+        glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
+        glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
+        glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
+    } else if (activeShaderProgram == ShadingMode::NORMAL) {
+        glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
+        glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
+        glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
+    } else if (activeShaderProgram == ShadingMode::GOURAUD) {
+        glUniform1i(exponentLocation, 2);
+        glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
+        glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
+        glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
+    }
 
-    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, projectTransform.data());
+    glBindVertexArray(VAOCat);
+    glDrawArrays(GL_TRIANGLES, 0, catSize);
 
-    // Draw here
-    glBindVertexArray(VAOCube);
-    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformCube.data());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    glBindVertexArray(VAOPyramid);
-    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformPyramid.data());
-    glDrawArrays(GL_TRIANGLES, 0, 18);
-
-    glBindVertexArray(VAOSphere);
-    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, transformSphere.data());
-    glDrawArrays(GL_TRIANGLES, 0, sphereSize);
-
-    shaderProgram.release();
-}
-
-void MainView::rotateFunction(int x, int y, int z) {
-    // Rotate
-    transformCube.rotate(x, 1, 0, 0);
-    transformCube.rotate(y, 0, 1, 0);
-    transformCube.rotate(z, 0, 0, 1);
-
-    transformPyramid.rotate(x, 1, 0, 0);
-    transformPyramid.rotate(y, 0, 1, 0);
-    transformPyramid.rotate(z, 0, 0, 1);
-
-    transformSphere.rotate(x, 1, 0, 0);
-    transformSphere.rotate(y, 0, 1, 0);
-    transformSphere.rotate(z, 0, 0, 1);
-}
-
-void MainView::scaleFunction(float s) {
-    // Set scale
-    transformCube.scale(s);
-    transformPyramid.scale(s);
-    transformSphere.scale(s);
+    shaderProgram[activeShaderProgram].release();
 }
 
 /**
@@ -283,60 +249,44 @@ void MainView::scaleFunction(float s) {
  * @param newHeight
  */
 void MainView::resizeGL(int newWidth, int newHeight) {
-    float newAspect = (float) newWidth / (float) newHeight;
+    aspectRatio = (float) newWidth / (float) newHeight;
+
+    updateProjectTransform();
+}
+
+void MainView::updateProjectTransform() {
     projectTransform.setToIdentity();
-    projectTransform.perspective(60.0f, newAspect * 1.0f, 1.0f, 100.0f);
+    projectTransform.perspective(60.0f, aspectRatio * 1.0f, 1.0f, 100.0f);
+
+    update();
+}
+
+void MainView::updateCatTransform() {
+    catTransform.setToIdentity();
+    catTransform.translate(0, 0, -10);
+    catTransform.scale(scale);
+    catTransform.rotate(QQuaternion::fromEulerAngles(rotation));
+
     update();
 }
 
 // --- Public interface
-
 void MainView::setRotation(int rotateX, int rotateY, int rotateZ) {
-    transformCube = QMatrix4x4();
-    transformCube.translate(2, 0, -6);
-
-    transformPyramid = QMatrix4x4();
-    transformPyramid.translate(-2, 0, -6);
-
-    transformSphere = QMatrix4x4();
-    transformSphere.translate(0, 0, -10);
-
-    // initialize global rotation variables, so they can be used again before scaling.
-    globalRotateX = rotateX;
-    globalRotateY = rotateY;
-    globalRotateZ = rotateZ;
-
-    scaleFunction(globalScale);
-    rotateFunction(rotateX, rotateY, rotateZ);
-
-    update();
+    auto x = (float) rotateX;
+    auto y = (float) rotateY;
+    auto z = (float) rotateZ;
+    rotation = QVector3D(x, y, z);
+    updateCatTransform();
 }
 
-void MainView::setScale(int scale) {
-    transformCube = QMatrix4x4();
-    transformCube.translate(2, 0, -6);
-
-    transformPyramid = QMatrix4x4();
-    transformPyramid.translate(-2, 0, -6);
-
-    transformSphere = QMatrix4x4();
-    transformSphere.translate(0, 0, -10);
-
-    // set global scale
-    globalScale = scale / 100.0f;
-
-    // rotation
-    rotateFunction(globalRotateX, globalRotateY, globalRotateZ);
-
-    // scaling
-    scaleFunction(globalScale);
-
-    update();
+void MainView::setScale(int newScale) {
+    scale = static_cast<float>(newScale) / 100.0f;
+    updateCatTransform();
 }
 
 void MainView::setShadingMode(ShadingMode shading) {
     qDebug() << "Changed shading to" << shading;
-    Q_UNIMPLEMENTED();
+    activeShaderProgram = shading;
 }
 
 // --- Private helpers
