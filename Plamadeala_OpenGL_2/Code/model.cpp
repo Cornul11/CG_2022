@@ -48,6 +48,7 @@ Model::Model(QString filename) {
         // Allign all vertex indices with the right normal/texturecoord indices
         alignData();
     }
+    qDebug() << "Done loading " << filename;
 }
 
 /**

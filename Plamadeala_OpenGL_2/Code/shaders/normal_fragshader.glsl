@@ -5,11 +5,16 @@
 in vec3 vertNormal;
 
 out vec4 fNormal;
-vec3 map(vec3 value, int inMin, int inMax, int outMin, int outMax) {
-    return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
+
+// function for mapping a range onto another
+// found here: https://stackoverflow.com/a/5735770/3826046
+vec3 map(vec3 vec, int inMin, int inMax, int outMin, int outMax)
+{
+    return (vec - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
+
 void main()
 {
-    vec3 vertNormalMapped = map(vertNormal, -1, 1, 0, 1);
-    fNormal = vec4(vertNormalMapped, 1.0);
+    vec3 mappedVertNormal = map(vertNormal, -1, 1, 0, 1);
+    fNormal = vec4(mappedVertNormal, 1.0);
 }

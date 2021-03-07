@@ -28,6 +28,8 @@ Q_OBJECT
     GLint modelLocation[3];
     GLint projectionLocation[3];
     GLint normalLocation[3];
+    GLint lightLocation[3];
+    GLint materialLocation[3];
     GLint exponentLocation;
 
     QMatrix4x4 projectTransform;
@@ -84,7 +86,7 @@ private:
     QVector<QVector3D> catVertices;
 
     float scale = 1.f;
-    float aspectRatio;
+    float aspectRatio = 1.f;
     QVector3D rotation;
 
     void updateCatTransform();
