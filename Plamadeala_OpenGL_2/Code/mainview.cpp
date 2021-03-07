@@ -178,6 +178,8 @@ void MainView::createShaderProgram() {
     modelLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("modelTransform");
     projectionLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("projectionTransform");
     normalLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("normalTransform");
+    lightLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("lightCoordinates");
+    materialLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("material");
 
     shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Vertex,
                                                                ":/shaders/normal_vertshader.glsl");
@@ -221,9 +223,13 @@ void MainView::paintGL() {
     QMatrix3x3 normalTransformation = catTransform.normalMatrix();
     shaderProgram[activeShaderProgram].bind();
     if (activeShaderProgram == ShadingMode::PHONG) {
+        QVector3D lightPositionMatrix = {50.0, 50.0, 50.0};
+        QVector4D material = {0.25f, 0.5f, 0.75f, 5.0f};
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
+        glUniform3f(lightLocation[activeShaderProgram], lightPositionMatrix.x(), lightPositionMatrix.y(), lightPositionMatrix.z());
+        glUniform4f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z(), material.w());
     } else if (activeShaderProgram == ShadingMode::NORMAL) {
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
