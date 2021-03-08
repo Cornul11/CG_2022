@@ -83,7 +83,6 @@ void MainView::loadMesh() {
     Model catModel(":/models/cat.obj");
     catModel.unitize();
 
-
     catVertices = catModel.getVertices();
     catSize = catVertices.size();
     auto catNormals = catModel.getNormals();
@@ -97,7 +96,7 @@ void MainView::loadMesh() {
     }
 }
 
-void MainView::loadTexture(QString file, GLuint *texturePtr) {
+void MainView::loadTexture(const QString &file, GLuint *texturePtr) {
     glGenTextures(1, texturePtr);
     glBindTexture(GL_TEXTURE_2D, *texturePtr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -183,13 +182,10 @@ void MainView::createShaderProgram() {
     textureLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("textureColor");
     exponentLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("exponent");
 
-
-
     shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Vertex,
                                                                ":/shaders/normal_vertshader.glsl");
     shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Fragment,
                                                                ":/shaders/normal_fragshader.glsl");
-
 
     shaderProgram[ShadingMode::NORMAL].link();
 
@@ -226,13 +222,16 @@ void MainView::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     QMatrix3x3 normalTransformation = catTransform.normalMatrix();
+    QVector3D material = {0.5f, 0.5f, 0.5f};
     shaderProgram[activeShaderProgram].bind();
     if (activeShaderProgram == ShadingMode::PHONG) {
-        QVector4D material = {0.25f, 0.5f, 0.75f, 5.0f};
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
-        glUniform3f(lightLocation[activeShaderProgram], lightPositionMatrix.x(), lightPositionMatrix.y(), lightPositionMatrix.z());
+        glUniform3f(lightLocation[activeShaderProgram],
+                    lightPositionMatrix.x(),
+                    lightPositionMatrix.y(),
+                    lightPositionMatrix.z());
         glUniform3f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z());
         glUniform1i(textureLocation[activeShaderProgram], 0);
         glUniform1i(exponentLocation[activeShaderProgram], exponent);
@@ -241,11 +240,13 @@ void MainView::paintGL() {
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
     } else if (activeShaderProgram == ShadingMode::GOURAUD) {
-        QVector4D material = {0.25f, 0.5f, 0.75f, 5.0f};
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
-        glUniform3f(lightLocation[activeShaderProgram], lightPositionMatrix.x(), lightPositionMatrix.y(), lightPositionMatrix.z());
+        glUniform3f(lightLocation[activeShaderProgram],
+                    lightPositionMatrix.x(),
+                    lightPositionMatrix.y(),
+                    lightPositionMatrix.z());
         glUniform3f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z());
         glUniform1i(textureLocation[activeShaderProgram], 0);
         glUniform1i(exponentLocation[activeShaderProgram], exponent);

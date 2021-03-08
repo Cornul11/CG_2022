@@ -16,22 +16,16 @@
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 Q_OBJECT
+    GLuint VBOCat{};
+    GLuint VAOCat{};
 
-    int globalRotateX;
-    int globalRotateY;
-    int globalRotateZ;
-    float globalScale;
-
-    GLuint VBOCat;
-    GLuint VAOCat;
-
-    GLint modelLocation[3];
-    GLint projectionLocation[3];
-    GLint normalLocation[3];
-    GLint lightLocation[3];
-    GLint materialLocation[3];
-    GLint textureLocation[3];
-    GLint exponentLocation[3];
+    GLint modelLocation[3]{};
+    GLint projectionLocation[3]{};
+    GLint normalLocation[3]{};
+    GLint lightLocation[3]{};
+    GLint materialLocation[3]{};
+    GLint textureLocation[3]{};
+    GLint exponentLocation[3]{};
 
     QMatrix4x4 projectTransform;
     QMatrix4x4 catTransform;
@@ -43,8 +37,8 @@ public:
         PHONG = 0, NORMAL, GOURAUD
     };
 
-    MainView(QWidget *parent = 0);
-    ~MainView();
+    explicit MainView(QWidget *parent = nullptr);
+    ~MainView() override;
 
     // Functions for widget input events
     void setRotation(int rotateX, int rotateY, int rotateZ);
@@ -53,13 +47,10 @@ public:
     void setLightPosition(int posX, int posY, int posZ);
     void setPhongExponent(int newExponent);
 
-
 protected:
     void initializeGL();
     void resizeGL(int newWidth, int newHeight);
     void paintGL();
-    void rotateFunction(int x, int y, int z);
-    void scaleFunction(float s);
     // Functions for keyboard input events
     void keyPressEvent(QKeyEvent *ev);
     void keyReleaseEvent(QKeyEvent *ev);
@@ -85,8 +76,8 @@ private:
     QOpenGLShaderProgram shaderProgram[3];
     int activeShaderProgram = ShadingMode::PHONG;
 
-    GLuint catTexture;
-    int catSize;
+    GLuint catTexture{};
+    int catSize{};
     QVector<QVector3D> catVertices;
 
     float scale = 1.f;
@@ -98,7 +89,7 @@ private:
     void updateCatTransform();
     void updateProjectTransform();
 
-    void loadTexture(QString file, GLuint *texturePtr);
+    void loadTexture(const QString& file, GLuint *texturePtr);
 
     void createShaderProgram();
     void sendVertexData(std::vector<Vertex> cat);
