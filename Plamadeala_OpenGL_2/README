@@ -1,8 +1,14 @@
-This is a README file
+README 2020:
+So at first I implemented the normal shader, which was pretty simple to do, we just had to create another matrix that would replicate the rotation of the cat and define the color.
 
-When submitting your assignment, describe (briefly) the changes you made and what difficulties you encountered in this file.
+Next I implemented the other two shaders and created the system for choosing the right one. A simple if else structure modifies the scene based on the chosen shader. 
 
-Also describe what controls (key short-cuts, mouse clicks, mouse movement etc) and possible bonus assignments you implemented, so we can check them more easily.
+Last but not least, I've implemented the texture mapping so as to be able to see the texture on the cat. This was a bit tricky, because we couldn't really figure out the pipeline of the texture in the shaders. In the end, we managed to get it working.
 
-If you have any suggestions/feedback for improving the practical assignments or support from teaching assistants, you may include it here OR post in anonymously on Nestor under Feedback.
+README 2021:
+Without the normal matrix, the normal colors are always changing based on the view. With the normal matrix, the normals are static and always computed correctly.
+Last year all my shaders were partially correct, so this year I made them from scratch hoping that they're much better. The normal shader was also rewritten from scratch.
+This year I've refactored the code and extracted big chunks of code in multiple functions, so as to make the code more modular.
+Moreover, I've added a slider that allows the user to change the Phong specular exponent, and three sliders that allow the user to change the position of the light.
 
+As a bonus, I've added a Z-buffer shader found online for utility and the . 
