@@ -6,6 +6,7 @@
 // Specify the input locations of attributes
 layout (location = 0) in vec3 vertCoordinates_in;
 layout (location = 1) in vec3 vertNormal_in;
+layout (location = 2) in vec2 textureCoordinates_in;
 
 // Specify the Uniforms of the vertex shader
 // uniform mat4 modelTransform; for example
@@ -13,11 +14,12 @@ uniform mat4 modelTransform;
 uniform mat4 projectionTransform;
 uniform mat3 normalTransform;
 uniform vec3 lightCoordinates;
-uniform vec4 material;
-//uniform int exponent;
+uniform vec3 material;
+uniform int exponent;
 
 // Specify the output of the vertex stage
 out vec3 vertColor;
+out vec3 vertNormal;
 out vec2 textureCoordinates;
 
 void main()
@@ -28,7 +30,7 @@ void main()
     vec3 normalizedVertex = normalize(-vertCoordinates_in);
     vec3 reflected = reflect(-lightDistance, vertNormal_in);
     float angle = max(dot(reflected, normalizedVertex), 0.05);
-    float specular = pow(angle, material.w);
+    float specular = pow(angle, exponent);
 
     vec3 normalTransVert = normalize(normalTransform * vertNormal_in);
     float diffuse = max(dot(normalTransVert, lightDistance), 0.05);
@@ -36,7 +38,7 @@ void main()
     vec3 unit = vec3(1, 1, 1);
     vertColor = material.x + unit * material.y * diffuse + material.z * specular;
 
-    //    texCoordinates = texCoordinates_in;
+    textureCoordinates = textureCoordinates_in;
 //    float Ia, Id, Is;
 //    vec3 lightAndMatAmb = vec3(0.2, 0.2, 0.2);
 //    vec3 lightSpec = vec3(0.4, 0.4, 0.4);

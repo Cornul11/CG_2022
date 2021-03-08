@@ -69,8 +69,8 @@ void MainView::initializeGL() {
 
     createShaderProgram();
 
+    loadTexture(":/textures/cat_diff.png", &catTexture);
     loadMesh();
-    loadTexture(":/textures/cat_diff.png", catTexture);
 
     sendVertexData(catVertexArray);
 
@@ -97,9 +97,9 @@ void MainView::loadMesh() {
     }
 }
 
-void MainView::loadTexture(const QString &file, GLuint texturePtr) {
-    glGenTextures(1, &texturePtr);
-    glBindTexture(GL_TEXTURE_2D, texturePtr);
+void MainView::loadTexture(QString file, GLuint *texturePtr) {
+    glGenTextures(1, texturePtr);
+    glBindTexture(GL_TEXTURE_2D, *texturePtr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -180,6 +180,10 @@ void MainView::createShaderProgram() {
     normalLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("normalTransform");
     lightLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("lightCoordinates");
     materialLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("material");
+    textureLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("textureColor");
+    exponentLocation[ShadingMode::PHONG] = shaderProgram[ShadingMode::PHONG].uniformLocation("exponent");
+
+
 
     shaderProgram[ShadingMode::NORMAL].addShaderFromSourceFile(QOpenGLShader::Vertex,
                                                                ":/shaders/normal_vertshader.glsl");
@@ -200,12 +204,13 @@ void MainView::createShaderProgram() {
 
     shaderProgram[ShadingMode::GOURAUD].link();
 
-//    exponentLocation = shaderProgram[ShadingMode::GOURAUD].uniformLocation("exponent");
     modelLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("modelTransform");
     projectionLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("projectionTransform");
     normalLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("normalTransform");
     lightLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("lightCoordinates");
     materialLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("material");
+    textureLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("textureColor");
+    exponentLocation[ShadingMode::GOURAUD] = shaderProgram[ShadingMode::GOURAUD].uniformLocation("exponent");
 }
 
 // --- OpenGL drawing
@@ -223,26 +228,31 @@ void MainView::paintGL() {
     QMatrix3x3 normalTransformation = catTransform.normalMatrix();
     shaderProgram[activeShaderProgram].bind();
     if (activeShaderProgram == ShadingMode::PHONG) {
-        QVector3D lightPositionMatrix = {50.0, 50.0, 50.0};
         QVector4D material = {0.25f, 0.5f, 0.75f, 5.0f};
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
         glUniform3f(lightLocation[activeShaderProgram], lightPositionMatrix.x(), lightPositionMatrix.y(), lightPositionMatrix.z());
-        glUniform4f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z(), material.w());
+        glUniform3f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z());
+        glUniform1i(textureLocation[activeShaderProgram], 0);
+        glUniform1i(exponentLocation[activeShaderProgram], exponent);
     } else if (activeShaderProgram == ShadingMode::NORMAL) {
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
     } else if (activeShaderProgram == ShadingMode::GOURAUD) {
-        QVector3D lightPositionMatrix = {50.0, 50.0, 50.0};
         QVector4D material = {0.25f, 0.5f, 0.75f, 5.0f};
         glUniformMatrix4fv(projectionLocation[activeShaderProgram], 1, GL_FALSE, projectTransform.data());
         glUniformMatrix4fv(modelLocation[activeShaderProgram], 1, GL_FALSE, catTransform.data());
         glUniformMatrix3fv(normalLocation[activeShaderProgram], 1, GL_FALSE, normalTransformation.data());
         glUniform3f(lightLocation[activeShaderProgram], lightPositionMatrix.x(), lightPositionMatrix.y(), lightPositionMatrix.z());
-        glUniform4f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z(), material.w());
+        glUniform3f(materialLocation[activeShaderProgram], material.x(), material.y(), material.z());
+        glUniform1i(textureLocation[activeShaderProgram], 0);
+        glUniform1i(exponentLocation[activeShaderProgram], exponent);
     }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, catTexture);
+
     glBindVertexArray(VAOCat);
     glDrawArrays(GL_TRIANGLES, 0, catSize);
 
@@ -296,6 +306,19 @@ void MainView::setScale(int newScale) {
 void MainView::setShadingMode(ShadingMode shading) {
     qDebug() << "Changed shading to" << shading;
     activeShaderProgram = shading;
+}
+
+void MainView::setLightPosition(int posX, int posY, int posZ) {
+    auto x = static_cast<float>(posX);
+    auto y = static_cast<float>(posY);
+    auto z = static_cast<float>(posZ);
+    lightPositionMatrix = {x, y, z};
+    updateCatTransform();
+}
+
+void MainView::setPhongExponent(int newExponent) {
+    exponent = static_cast<float>(newExponent);
+    updateCatTransform();
 }
 
 // --- Private helpers

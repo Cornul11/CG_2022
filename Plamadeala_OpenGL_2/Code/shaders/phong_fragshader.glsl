@@ -6,15 +6,16 @@
 
 // Specify the inputs to the fragment shader
 // These must have the same type and name!
-in vec3 vertColor;
 in vec3 vertCoordinates;
 in vec3 vertNormal;
-in vec2 textCoordinates;
+in vec2 textureCoordinates;
+
 
 // Specify the Uniforms of the fragment shaders
-uniform mat3 normalTransform;
 uniform vec3 lightCoordinates;
-uniform vec4 material;
+uniform vec3 material;
+uniform sampler2D textureColor;
+uniform int exponent;
 
 // Specify the output of the fragment shader
 // Usually a vec4 describing a color (Red, Green, Blue, Alpha/Transparency)
@@ -26,11 +27,10 @@ void main()
     vec3 normalizedVertex = normalize(-vertCoordinates);
     vec3 reflected = reflect(-lightDistance, vertNormal);
     float angle = max(dot(reflected, normalizedVertex), 0.05);
-    float specular = pow(angle, material.w);
+    float specular = pow(angle, exponent);
 
-    vec3 normalTransVert = normalize(normalTransform * vertNormal);
-    float diffuse = max(dot(normalTransVert, lightDistance), 0.05);
+    float diffuse = max(dot(vertNormal, lightDistance), 0.05);
 
     vec3 unit = vec3(1, 1, 1);
-    fColor = vec4(material.x + unit * material.y * diffuse + material.z * specular, 1.0);
+    fColor = vec4(material.x + unit * material.y * diffuse + material.z * specular, 1.0) * texture(textureColor, textureCoordinates);
 }

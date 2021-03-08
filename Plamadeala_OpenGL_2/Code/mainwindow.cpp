@@ -3,13 +3,11 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+    ui(new Ui::MainWindow) {
     ui->setupUi(this);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
@@ -71,4 +69,34 @@ void MainWindow::on_GouraudButton_toggled(bool checked) {
         ui->mainView->setShadingMode(MainView::GOURAUD);
         ui->mainView->update();
     }
+}
+
+void MainWindow::on_rotationLightX_sliderMoved(int position) {
+    ui->mainView->setLightPosition(position, ui->rotationLightY->value(), ui->rotationLightZ->value());
+}
+
+void MainWindow::on_rotationLightY_sliderMoved(int position) {
+    ui->mainView->setLightPosition(ui->rotationLightX->value(), position, ui->rotationLightZ->value());
+}
+
+void MainWindow::on_rotationLightZ_sliderMoved(int position) {
+    ui->mainView->setLightPosition(ui->rotationLightY->value(), ui->rotationLightY->value(), position);
+}
+
+void MainWindow::on_resetLightPosition_clicked(bool checked) {
+    Q_UNUSED(checked);
+    ui->rotationLightX->setValue(50);
+    ui->rotationLightY->setValue(50);
+    ui->rotationLightZ->setValue(50);
+    ui->mainView->setLightPosition(50, 50, 50);
+}
+
+void MainWindow::on_specularSlider_sliderMoved(int position) {
+    ui->mainView->setPhongExponent(position);
+}
+
+void MainWindow::on_resetPhongExponent_clicked(bool checked) {
+    Q_UNUSED(checked);
+    ui->specularSlider->setValue(1);
+    ui->mainView->setPhongExponent(1);
 }

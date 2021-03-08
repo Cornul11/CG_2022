@@ -30,7 +30,8 @@ Q_OBJECT
     GLint normalLocation[3];
     GLint lightLocation[3];
     GLint materialLocation[3];
-    GLint exponentLocation;
+    GLint textureLocation[3];
+    GLint exponentLocation[3];
 
     QMatrix4x4 projectTransform;
     QMatrix4x4 catTransform;
@@ -49,6 +50,9 @@ public:
     void setRotation(int rotateX, int rotateY, int rotateZ);
     void setScale(int newScale);
     void setShadingMode(ShadingMode shading);
+    void setLightPosition(int posX, int posY, int posZ);
+    void setPhongExponent(int newExponent);
+
 
 protected:
     void initializeGL();
@@ -79,7 +83,7 @@ private:
     QTimer timer; // timer used for animation
 
     QOpenGLShaderProgram shaderProgram[3];
-    int activeShaderProgram = ShadingMode::NORMAL;
+    int activeShaderProgram = ShadingMode::PHONG;
 
     GLuint catTexture;
     int catSize;
@@ -87,12 +91,14 @@ private:
 
     float scale = 1.f;
     float aspectRatio = 1.f;
+    float exponent = 1;
+    QVector3D lightPositionMatrix = {50, 50, 50};
     QVector3D rotation;
 
     void updateCatTransform();
     void updateProjectTransform();
 
-    void loadTexture(const QString& file, GLuint texturePtr);
+    void loadTexture(QString file, GLuint *texturePtr);
 
     void createShaderProgram();
     void sendVertexData(std::vector<Vertex> cat);

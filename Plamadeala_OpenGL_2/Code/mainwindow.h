@@ -29,6 +29,12 @@ private slots:
     void on_PhongButton_toggled(bool checked);
     void on_NormalButton_toggled(bool checked);
     void on_GouraudButton_toggled(bool checked);
+    void on_rotationLightX_sliderMoved(int position);
+    void on_rotationLightY_sliderMoved(int position);
+    void on_rotationLightZ_sliderMoved(int position);
+    void on_resetLightPosition_clicked(bool checked);
+    void on_specularSlider_sliderMoved(int position);
+    void on_resetPhongExponent_clicked(bool checked);
 };
 
 #endif // MAINWINDOW_H
