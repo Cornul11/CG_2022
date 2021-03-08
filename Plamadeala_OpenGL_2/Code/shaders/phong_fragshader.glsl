@@ -23,14 +23,25 @@ out vec4 fColor;
 
 void main()
 {
-    vec3 lightDistance = normalize(lightCoordinates - vertCoordinates);
-    vec3 normalizedVertex = normalize(-vertCoordinates);
-    vec3 reflected = reflect(-lightDistance, vertNormal);
-    float angle = max(dot(reflected, normalizedVertex), 0.05);
-    float specular = pow(angle, exponent);
+    vec3 N = vertNormal;
+    vec3 L = normalize(lightCoordinates - vertCoordinates);
+    vec3 R = reflect(-L, N);
+    vec3 V = normalize(-vertCoordinates);
 
-    float diffuse = max(dot(vertNormal, lightDistance), 0.05);
+    float Ia = 1.0;
+    float Id = 1.0;
+    float Is = 1.0;
 
-    vec3 unit = vec3(1, 1, 1);
-    fColor = vec4(material.x + unit * material.y * diffuse + material.z * specular, 1.0) * texture(textureColor, textureCoordinates);
+    float ka = material.x;
+    float kd = material.y;
+    float ks = material.z;
+
+    float p = exponent;
+
+    float IA = Ia * ka;// I_A = I_a * k_a
+    float ID = Id * kd * max(0, dot(N, L));// I_D = I_d * k_d * max(0, N * L)
+    float IS = Is * ks * pow(max(0, dot(R, V)), p);// I_S = I_s * k_s * max(0, R * V) ^ p
+
+    vec3 rgb = vec3(1, 1, 1) * (IA + ID + IS);
+    fColor = vec4(rgb, 1.0) * texture(textureColor, textureCoordinates);
 }

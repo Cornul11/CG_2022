@@ -19,35 +19,31 @@ uniform int exponent;
 
 // Specify the output of the vertex stage
 out vec3 vertColor;
-out vec3 vertNormal;
 out vec2 textureCoordinates;
 
 void main()
 {
     gl_Position = projectionTransform * modelTransform * vec4(vertCoordinates_in, 1.0);
-
-    vec3 lightDistance = normalize(lightCoordinates - vertCoordinates_in);
-    vec3 normalizedVertex = normalize(-vertCoordinates_in);
-    vec3 reflected = reflect(-lightDistance, vertNormal_in);
-    float angle = max(dot(reflected, normalizedVertex), 0.05);
-    float specular = pow(angle, exponent);
-
-    vec3 normalTransVert = normalize(normalTransform * vertNormal_in);
-    float diffuse = max(dot(normalTransVert, lightDistance), 0.05);
-
-    vec3 unit = vec3(1, 1, 1);
-    vertColor = material.x + unit * material.y * diffuse + material.z * specular;
-
     textureCoordinates = textureCoordinates_in;
-//    float Ia, Id, Is;
-//    vec3 lightAndMatAmb = vec3(0.2, 0.2, 0.2);
-//    vec3 lightSpec = vec3(0.4, 0.4, 0.4);
-//    vec3 lightDiff = vec3(0.3, 0.3, 0.3);
-//    vec3 materialDiff = vec3(0.5, 0.5, 0.5);
-//    Ia = dot(lightAndMatAmb, lightAndMatAmb);
-//    Id = dot(lightDiff, lightSpec) * max(0, dot(vertNormal_in, lightMatrix));
-//    Is = dot(lightSpec, lightAndMatAmb) * pow(max(0, dot(vertNormal_in, vec3(0, 0, -1))), exponent);
-//
-//    vertColor = materialDiff * (Ia + Id + Is);
-//    textureCoordinates = textureCoordinates_in;
+
+    vec3 N = normalize(normalTransform * vertNormal_in);
+    vec3 L = normalize(lightCoordinates - vertCoordinates_in);
+    vec3 R = reflect(-L, vertNormal_in);
+    vec3 V = normalize(-vertCoordinates_in);
+
+    float Ia = 1.0;
+    float Id = 1.0;
+    float Is = 1.0;
+
+    float ka = material.x;
+    float kd = material.y;
+    float ks = material.z;
+
+    float p = exponent;
+
+    float IA = Ia * ka;// I_A = I_a * k_a
+    float ID = Id * kd * max(0, dot(N, L));// I_D = I_d * k_d * max(0, N * L)
+    float IS = Is * ks * pow(max(0, dot(R, V)), p);// I_S = I_s * k_s * max(0, R * V) ^ p
+
+    vertColor = vec3(1, 1, 1) * (IA + ID + IS);
 }
