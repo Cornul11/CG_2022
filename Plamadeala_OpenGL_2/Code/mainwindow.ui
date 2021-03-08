@@ -339,6 +339,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QRadioButton" name="zbufferButton">
+            <property name="text">
+             <string>Z-Buffer</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

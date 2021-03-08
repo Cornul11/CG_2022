@@ -31,6 +31,8 @@ add_executable(Code
         shaders/phong_vertshader.glsl
         shaders/gouraud_fragshader.glsl
         shaders/gouraud_vertshader.glsl
+        shaders/zbuffer_fragshader.glsl
+        shaders/zbuffer_vertshader.glsl
         resources.qrc
         )
 

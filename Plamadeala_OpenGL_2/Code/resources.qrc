@@ -6,6 +6,8 @@
         <file>shaders/normal_vertshader.glsl</file>
         <file>shaders/phong_fragshader.glsl</file>
         <file>shaders/phong_vertshader.glsl</file>
+        <file>shaders/zbuffer_vertshader.glsl</file>
+        <file>shaders/zbuffer_fragshader.glsl</file>
         <file>models/cube.obj</file>
         <file>models/flat_surface.obj</file>
         <file>textures/cat_diff.png</file>

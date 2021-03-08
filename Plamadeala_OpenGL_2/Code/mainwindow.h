@@ -35,6 +35,7 @@ private slots:
     void on_resetLightPosition_clicked(bool checked);
     void on_specularSlider_sliderMoved(int position);
     void on_resetPhongExponent_clicked(bool checked);
+    void on_zbufferButton_toggled(bool checked);
 };
 
 #endif // MAINWINDOW_H

@@ -100,3 +100,11 @@ void MainWindow::on_resetPhongExponent_clicked(bool checked) {
     ui->specularSlider->setValue(1);
     ui->mainView->setPhongExponent(1);
 }
+
+void MainWindow::on_zbufferButton_toggled(bool checked)
+{
+    if (checked) {
+        ui->mainView->setShadingMode(MainView::ZBRUSH);
+        ui->mainView->update();
+    }
+}

@@ -19,9 +19,9 @@ Q_OBJECT
     GLuint VBOCat{};
     GLuint VAOCat{};
 
-    GLint modelLocation[3]{};
-    GLint projectionLocation[3]{};
-    GLint normalLocation[3]{};
+    GLint modelLocation[4]{};
+    GLint projectionLocation[4]{};
+    GLint normalLocation[4]{};
     GLint lightLocation[3]{};
     GLint materialLocation[3]{};
     GLint textureLocation[3]{};
@@ -34,7 +34,7 @@ Q_OBJECT
 
 public:
     enum ShadingMode : GLuint {
-        PHONG = 0, NORMAL, GOURAUD
+        PHONG = 0, NORMAL, GOURAUD, ZBRUSH
     };
 
     explicit MainView(QWidget *parent = nullptr);
@@ -73,7 +73,7 @@ private:
     QOpenGLDebugLogger debugLogger;
     QTimer timer; // timer used for animation
 
-    QOpenGLShaderProgram shaderProgram[3];
+    QOpenGLShaderProgram shaderProgram[4];
     int activeShaderProgram = ShadingMode::PHONG;
 
     GLuint catTexture{};
