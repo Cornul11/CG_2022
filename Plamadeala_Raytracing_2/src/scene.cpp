@@ -52,6 +52,11 @@ Color Scene::trace(Ray const &ray, unsigned depth) {
 
     Color matColor = material.color;
 
+    if (material.hasTexture) {
+        Point p = obj->toUV(hit);
+        matColor = material.texture.colorAt(p.x, 1 - p.y);
+    }
+
     // Add ambient once, regardless of the number of lights.
     Color color = material.ka * matColor;
 
@@ -141,12 +146,19 @@ Color Scene::trace(Ray const &ray, unsigned depth) {
 void Scene::render(Image &img) {
     unsigned w = img.width();
     unsigned h = img.height();
+    double add = 1 / ((double) supersamplingFactor + 1);
 
     for (unsigned y = 0; y < h; ++y)
         for (unsigned x = 0; x < w; ++x) {
-            Point pixel(x + 0.5, h - 1 - y + 0.5, 0);
-            Ray ray(eye, (pixel - eye).normalized());
-            Color col = trace(ray, recursionDepth);
+            Color col = Color(0, 0, 0);
+            for (unsigned i = 0; i < supersamplingFactor; ++i) {
+                for (unsigned j = 0; j < supersamplingFactor; ++j) {
+                    Point pixel(x + add * (j + 1), h - 1 - y + add * (i + 1), 0);
+                    Ray ray(eye, (pixel - eye).normalized());
+                    col += trace(ray, recursionDepth);
+                }
+            }
+            col = col / (supersamplingFactor * supersamplingFactor);
             col.clamp();
             img(x, y) = col;
         }

@@ -41,8 +41,9 @@ Hit Sphere::intersect(Ray const &ray)
 Vector Sphere::toUV(Point const &hit)
 {
     // placeholders
-    double u = 0.0;
-    double v = 0.0;
+    Point p = (hit - position);
+    double u = 0.5 + ((atan2(p.y, p.x)) / (2 * PI));
+    double v = 1.0 - (acos(p.z / r) / PI);
 
     // Use a Vector to return 2 doubles. The third value is never read.
     return Vector{u, v, 0.0};
