@@ -5,8 +5,7 @@
 
 using namespace std;
 
-Hit Sphere::intersect(Ray const &ray)
-{
+Hit Sphere::intersect(Ray const &ray) {
     // Sphere formula: ||x - position||^2 = r^2
     // Line formula:   x = ray.O + t * ray.D
 
@@ -38,10 +37,33 @@ Hit Sphere::intersect(Ray const &ray)
     return Hit(t0, N);
 }
 
-Vector Sphere::toUV(Point const &hit)
-{
+Vector Sphere::toUV(Point const &hit) {
     // placeholders
-    Point p = (hit - position);
+    double radians = (angle * PI) / 180;
+    Vector vec;
+    auto point = hit - position;
+    auto axisVector = -radians * axis;
+    Point rotatedVec = point;
+
+    // x axis
+    rotatedVec.x = point.x;
+    rotatedVec.y = point.y * cos(axisVector.x) - point.z * sin(axisVector.x);
+    rotatedVec.z = point.y * sin(axisVector.x) + point.z * cos(axisVector.x);
+
+    // y axis
+    vec = rotatedVec;
+    rotatedVec.x = vec.x * cos(axisVector.y) + vec.z * sin(axisVector.y);
+    rotatedVec.y = vec.y;
+    rotatedVec.z = -vec.x * sin(axisVector.y) + vec.z * cos(axisVector.y);
+
+    // z axis
+    vec = rotatedVec;
+    rotatedVec.x = vec.x * cos(axisVector.z) - vec.y * sin(axisVector.z);
+    rotatedVec.y = vec.x * sin(axisVector.z) + vec.y * cos(axisVector.z);
+    rotatedVec.z = vec.z;
+
+    Point p = rotatedVec;
+
     double u = 0.5 + ((atan2(p.y, p.x)) / (2 * PI));
     double v = 1.0 - (acos(p.z / r) / PI);
 
@@ -49,11 +71,10 @@ Vector Sphere::toUV(Point const &hit)
     return Vector{u, v, 0.0};
 }
 
-Sphere::Sphere(Point const &pos, double radius, Vector const& axis, double angle)
-:
-    // Feel free to modify this constructor.
+Sphere::Sphere(Point const &pos, double radius, Vector const &axis, double angle)
+    :
+// Feel free to modify this constructor.
     position(pos),
     r(radius),
     axis(axis),
-    angle(angle)
-{}
+    angle(angle) {}
