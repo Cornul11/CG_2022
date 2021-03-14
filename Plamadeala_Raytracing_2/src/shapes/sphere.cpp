@@ -47,19 +47,31 @@ Vector Sphere::toUV(Point const &hit) {
 
     // x axis
     rotatedVec.x = point.x;
-    rotatedVec.y = point.y * cos(axisVector.x) - point.z * sin(axisVector.x);
-    rotatedVec.z = point.y * sin(axisVector.x) + point.z * cos(axisVector.x);
+
+    const auto cosForX = cos(axisVector.x);
+    const auto sinForX = sin(axisVector.x);
+
+    rotatedVec.y = point.y * cosForX - point.z * sinForX;
+    rotatedVec.z = point.y * sinForX + point.z * cosForX;
 
     // y axis
     vec = rotatedVec;
-    rotatedVec.x = vec.x * cos(axisVector.y) + vec.z * sin(axisVector.y);
+
+    const auto cosForY = cos(axisVector.y);
+    const auto sinForY = sin(axisVector.y);
+
+    rotatedVec.x = vec.x * cosForY + vec.z * sinForY;
     rotatedVec.y = vec.y;
-    rotatedVec.z = -vec.x * sin(axisVector.y) + vec.z * cos(axisVector.y);
+    rotatedVec.z = -vec.x * sinForY + vec.z * cosForY;
 
     // z axis
     vec = rotatedVec;
-    rotatedVec.x = vec.x * cos(axisVector.z) - vec.y * sin(axisVector.z);
-    rotatedVec.y = vec.x * sin(axisVector.z) + vec.y * cos(axisVector.z);
+
+    const auto cosForZ = cos(axisVector.z);
+    const auto sinForZ = sin(axisVector.z);
+
+    rotatedVec.x = vec.x * cosForZ - vec.y * sinForZ;
+    rotatedVec.y = vec.x * sinForZ + vec.y * cosForZ;
     rotatedVec.z = vec.z;
 
     Point p = rotatedVec;
