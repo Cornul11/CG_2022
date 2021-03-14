@@ -85,7 +85,49 @@ Color Scene::trace(Ray const &ray, unsigned depth) {
 
     if (depth > 0 and material.isTransparent) {
         // The object is transparent, and thus refracts and reflects light.
+        Vector reflectDir = reflect(ray.D, shadingN);
+        Ray reflectRay(hit + (epsilon * shadingN), reflectDir);
 
+        double DdotN = ray.D.dot(N);
+        double ni = 1.0;
+        double nt = material.nt;
+        int outside = 0;
+
+        if (DdotN < 0) {
+            DdotN = -DdotN;
+            outside = 1;
+        } else {
+            shadingN = -shadingN;
+            N = -N;
+            std::swap(nt, ni);
+        }
+
+        double refRatio = ni / nt;
+        double k = 1 - refRatio * refRatio * (1 - DdotN * DdotN);
+
+        Vector refractDir;
+        if (k < 0) {
+            refractDir = Vector(0);
+        } else {
+            refractDir = refRatio * ray.D + (refRatio * DdotN - sqrt(k)) * N;
+        }
+        refractDir.normalize();
+
+        Vector refractRayFrom;
+        if (outside == 1) {
+            refractRayFrom = hit - (epsilon * shadingN);
+        } else {
+            refractRayFrom = hit + (epsilon * shadingN);
+        }
+
+        //Schlick's approximation to determine the ratio between the two.
+        double kr0 = ((ni - nt) / (ni + nt)) * ((ni - nt) / (ni + nt));
+        double kr = kr0 + (1.0 - kr0) * pow(1.0 - DdotN, 5);
+
+        Ray refractRay(refractRayFrom, refractDir);
+
+        color += trace(reflectRay, depth - 1) * kr +
+            trace(refractRay, depth - 1) * (1.0 - kr);
     } else if (depth > 0 and material.ks > 0.0) {
         // The object is not transparent, but opaque.
         Vector reflectDir = reflect(ray.D, shadingN);
