@@ -1,3 +1,4 @@
+2020-2021 course edition:
 I've added a Sphere, a Cube and a Pyramid to the view using correct parameters. I load the Sphere from a file, while I manually define every vertex for the Sphere and the Pyramid.
 
 I have implemented the rotation and scaling functions from the view. Any change in the dials and the slider will replicate in the view.
@@ -8,4 +9,6 @@ A lot of code refactoring was executed on the whole project.
 
 We've added a CMakeLists.txt file that can be used to import the project in CLion for development.
 
-The changes made to the code based on my last year's submission were pretty small, mostly C++ refactoring and main class changes of various fields.
+
+2021-2022 course edition:
+The changes we have made to the code based on our submissions from last year were minimal, mostly C++ refactoring and main class changes of various fields.

@@ -54,6 +54,7 @@ void MainView::initializeGL() {
     QString glVersion;
     glVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
     qDebug() << ":: Using OpenGL" << qPrintable(glVersion);
+    qDebug() << ":: Using QT" << QT_VERSION;
 
     // Enable depth buffer
     glEnable(GL_DEPTH_TEST);
